@@ -112,6 +112,13 @@ Se utilizzi Ollama, puoi modificare i parametri del modello nel file `backend/sr
 
 Il sistema può funzionare anche senza Ollama, utilizzando risposte predefinite per domande comuni. Tuttavia, per un'esperienza più completa e personalizzata, è consigliabile utilizzare Ollama.
 
+## Funzionalità
+
+- **Chat persistenti**: Le conversazioni vengono salvate automaticamente e saranno disponibili anche dopo l'aggiornamento della pagina
+- **Gestione delle chat**: Possibilità di creare nuove chat e di eliminare quelle esistenti
+- **Risposte intuitive**: Il concierge può fornire informazioni su menu, attività e servizi dell'hotel
+- **Interfaccia responsive**: Utilizzabile sia da desktop che da dispositivi mobili
+
 ## Struttura del progetto
 
 ```

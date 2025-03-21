@@ -1,47 +1,243 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Elementi DOM
+    console.log('Script loaded');
+
+    // DOM Elements
+    const messagesContainer = document.getElementById('messages-container');
     const chatForm = document.getElementById('chat-form');
     const messageInput = document.getElementById('message-input');
-    const messagesContainer = document.getElementById('messages-container');
-    const sendButton = document.getElementById('send-button');
-    const newChatButton = document.getElementById('new-chat-btn');
+    const newChatBtn = document.getElementById('new-chat-btn');
+    const sidebarChats = document.getElementById('sidebar-chats');
     const sidebarToggle = document.getElementById('sidebar-toggle');
     
-    // Stato del sistema
-    let chatHistory = [];
+    // State
+    let currentChatId = null;
     let isWaitingForResponse = false;
     
     // Backend URL
     const BACKEND_URL = 'http://localhost:3001/api/chat';
     
-    // Genera un ID casuale per la camera (simulando una stanza d'hotel)
-    const generateRoomId = () => {
-        if (!localStorage.getItem('roomId')) {
-            localStorage.setItem('roomId', `room_${Math.floor(Math.random() * 100) + 1}`);
+    console.log('DOM Elements found:', {
+        messagesContainer: !!messagesContainer,
+        chatForm: !!chatForm,
+        messageInput: !!messageInput,
+        newChatBtn: !!newChatBtn,
+        sidebarChats: !!sidebarChats
+    });
+
+    // ===== CORE FUNCTIONS =====
+    
+    // Get all chats
+    function getChats() {
+        try {
+            const chats = localStorage.getItem('villa_petriolo_chats');
+            return chats ? JSON.parse(chats) : {};
+        } catch (error) {
+            console.error('Error loading chats:', error);
+            return {};
         }
-        return localStorage.getItem('roomId');
-    };
+    }
     
-    // Inizializza la chat
-    const initChat = () => {
-        chatHistory = [];
-        messagesContainer.innerHTML = `
-            <div class="message-row bot-row">
-                <div class="message bot-message">
-                    <div class="message-avatar">
-                        <i class="fas fa-concierge-bell"></i>
-                    </div>
-                    <div class="message-content">
-                        <p>Benvenuto a Villa Petriolo! Sono il tuo concierge digitale. Posso aiutarti con informazioni sul nostro ristorante, attività disponibili o servizi della struttura. Come posso esserti utile oggi?</p>
-                    </div>
+    // Save all chats
+    function saveChats(chats) {
+        try {
+            localStorage.setItem('villa_petriolo_chats', JSON.stringify(chats));
+        } catch (error) {
+            console.error('Error saving chats:', error);
+        }
+    }
+    
+    // Create a new chat
+    function createNewChat() {
+        console.log('Creating new chat');
+        
+        // Generate ID
+        currentChatId = 'chat_' + Date.now();
+        
+        // Clear messages area
+        messagesContainer.innerHTML = '';
+        
+        // Add welcome message
+        const welcomeMessage = "Benvenuto a Villa Petriolo! Sono il tuo concierge digitale. Posso aiutarti con informazioni sul nostro ristorante, attività disponibili o servizi della struttura. Come posso esserti utile oggi?";
+        addMessage(welcomeMessage, 'bot');
+        
+        // Update UI
+        updateChatList();
+    }
+    
+    // Load a chat
+    function loadChat(chatId) {
+        console.log('Loading chat:', chatId);
+        
+        const chats = getChats();
+        const chat = chats[chatId];
+        
+        if (!chat) {
+            console.error('Chat not found:', chatId);
+            return;
+        }
+        
+        // Set current chat
+        currentChatId = chatId;
+        
+        // Clear and populate messages
+        messagesContainer.innerHTML = '';
+        chat.messages.forEach(msg => {
+            displayMessage(msg.text, msg.sender);
+        });
+        
+        // Update UI
+        updateChatList();
+    }
+    
+    // Delete a chat
+    function deleteChat(chatId) {
+        console.log('Deleting chat:', chatId);
+        
+        const chats = getChats();
+        delete chats[chatId];
+        saveChats(chats);
+        
+        // If current chat is deleted, create a new one
+        if (chatId === currentChatId) {
+            createNewChat();
+        }
+        
+        updateChatList();
+    }
+    
+    // Update chat list in sidebar
+    function updateChatList() {
+        console.log('Updating chat list');
+        
+        const chats = getChats();
+        const chatIds = Object.keys(chats).sort((a, b) => {
+            return new Date(chats[b].timestamp) - new Date(chats[a].timestamp);
+        });
+        
+        // Clear sidebar
+        sidebarChats.innerHTML = '';
+        
+        if (chatIds.length === 0) {
+            sidebarChats.innerHTML = '<div class="empty-chats">Nessuna chat disponibile</div>';
+            return;
+        }
+        
+        // Add each chat to sidebar
+        chatIds.forEach(chatId => {
+            const chat = chats[chatId];
+            const chatEl = document.createElement('div');
+            chatEl.className = `chat-item ${chatId === currentChatId ? 'active' : ''}`;
+            
+            chatEl.innerHTML = `
+                <div class="chat-item-content" data-id="${chatId}">
+                    <div class="chat-item-title">${chat.title || 'Nuova conversazione'}</div>
+                    <div class="chat-item-date">${new Date(chat.timestamp).toLocaleDateString()}</div>
                 </div>
-            </div>
-        `;
-        messageInput.focus();
+                <button class="delete-chat-btn" data-id="${chatId}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            
+            sidebarChats.appendChild(chatEl);
+        });
+        
+        // Add click events
+        document.querySelectorAll('.chat-item-content').forEach(el => {
+            el.addEventListener('click', () => {
+                loadChat(el.dataset.id);
+            });
+        });
+        
+// Funzioni per il modale personalizzato
+function showModal(message, confirmCallback) {
+    const modal = document.getElementById('custom-modal');
+    const modalMessage = document.getElementById('modal-message');
+    const confirmBtn = document.getElementById('modal-confirm-btn');
+    const cancelBtn = document.getElementById('modal-cancel-btn');
+    
+    // Imposta il messaggio
+    modalMessage.textContent = message;
+    
+    // Mostra il modale
+    modal.classList.add('show');
+    
+    // Gestisci i pulsanti
+    const handleConfirm = () => {
+        modal.classList.remove('show');
+        confirmBtn.removeEventListener('click', handleConfirm);
+        cancelBtn.removeEventListener('click', handleCancel);
+        confirmCallback();
     };
     
-    // Aggiungi un messaggio alla chat
-    const addMessage = (text, sender) => {
+    const handleCancel = () => {
+        modal.classList.remove('show');
+        confirmBtn.removeEventListener('click', handleConfirm);
+        cancelBtn.removeEventListener('click', handleCancel);
+    };
+    
+    confirmBtn.addEventListener('click', handleConfirm);
+    cancelBtn.addEventListener('click', handleCancel);
+}
+
+    // Quando aggiungi i bottoni di eliminazione:
+    document.querySelectorAll('.delete-chat-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const chatId = btn.dataset.id;
+            
+            // Usa il modale personalizzato invece di confirm()
+            showModal('Sei sicuro di voler eliminare questa chat?', () => {
+                deleteChat(chatId);
+                if (chatId === currentChatId) {
+                    createNewChat();
+                }
+            });
+        });
+    });
+    }
+    
+    // Add message to current chat
+    function addMessage(text, sender) {
+        console.log('Adding message:', { sender, text: text.substring(0, 30) + '...' });
+        
+        // Display message
+        displayMessage(text, sender);
+        
+        // Save message
+        const chats = getChats();
+        
+        if (!currentChatId) {
+            currentChatId = 'chat_' + Date.now();
+        }
+        
+        // Get or create chat
+        const chat = chats[currentChatId] || {
+            messages: [],
+            timestamp: new Date().toISOString(),
+            title: 'Nuova conversazione'
+        };
+        
+        // Add message
+        chat.messages.push({ sender, text });
+        
+        // Update chat info
+        chat.timestamp = new Date().toISOString();
+        
+        // Set title from first user message
+        if (sender === 'user' && chat.messages.filter(m => m.sender === 'user').length === 1) {
+            chat.title = text.length > 20 ? text.substring(0, 17) + '...' : text;
+        }
+        
+        // Save
+        chats[currentChatId] = chat;
+        saveChats(chats);
+        
+        // Update UI
+        updateChatList();
+    }
+    
+    // Display message in UI
+    function displayMessage(text, sender) {
         const messageRow = document.createElement('div');
         messageRow.className = `message-row ${sender === 'user' ? 'user-row' : 'bot-row'}`;
         
@@ -57,16 +253,11 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         
         messagesContainer.appendChild(messageRow);
-        
-        // Scroll to bottom
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
-        // Aggiungi alla storia
-        chatHistory.push({ sender, text });
-    };
+    }
     
-    // Mostra indicatore di "sta scrivendo"
-    const showTypingIndicator = () => {
+    // Show typing indicator
+    function showTypingIndicator() {
         const indicatorRow = document.createElement('div');
         indicatorRow.className = 'message-row bot-row';
         indicatorRow.id = 'typing-indicator-row';
@@ -86,18 +277,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         messagesContainer.appendChild(indicatorRow);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    };
+    }
     
-    // Rimuovi indicatore di "sta scrivendo"
-    const removeTypingIndicator = () => {
-        const indicatorRow = document.getElementById('typing-indicator-row');
-        if (indicatorRow) {
-            indicatorRow.remove();
-        }
-    };
+    // Remove typing indicator
+    function removeTypingIndicator() {
+        const indicator = document.getElementById('typing-indicator-row');
+        if (indicator) indicator.remove();
+    }
     
-    // Invia un messaggio al backend
-    const sendMessageToBackend = async (text) => {
+    // Send message to backend
+    async function sendMessageToBackend(text) {
         try {
             const response = await fetch(BACKEND_URL, {
                 method: 'POST',
@@ -106,66 +295,86 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     message: text,
-                    roomId: localStorage.getItem('roomId')
+                    roomId: 'default_room'
                 }),
             });
             
             if (!response.ok) {
-                throw new Error(`Errore HTTP: ${response.status}`);
+                throw new Error(`HTTP error: ${response.status}`);
             }
             
             const data = await response.json();
             return data.response;
         } catch (error) {
-            console.error('Errore nell\'invio del messaggio:', error);
+            console.error('Error sending message:', error);
             return "Mi dispiace, sto avendo problemi di connessione. Potresti riprovare tra poco?";
         }
-    };
+    }
     
-    // Gestisci l'invio del messaggio
-    const handleSendMessage = async (e) => {
+    // ===== EVENT LISTENERS =====
+    
+    // Form submission
+    chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const userMessage = messageInput.value.trim();
         if (userMessage === '' || isWaitingForResponse) return;
         
-        // Aggiungi il messaggio dell'utente
+        // Add user message
         addMessage(userMessage, 'user');
         
-        // Pulisci l'input
+        // Clear input
         messageInput.value = '';
         
-        // Mostra indicatore di "sta scrivendo"
+        // Show typing indicator
         isWaitingForResponse = true;
         showTypingIndicator();
         
-        // Simula un piccolo ritardo prima della risposta (per effetto realistico)
+        // Send to backend with delay
         setTimeout(async () => {
-            // Ottieni la risposta dal backend
             const botResponse = await sendMessageToBackend(userMessage);
             
-            // Rimuovi indicatore e aggiungi la risposta
+            // Remove typing indicator
             removeTypingIndicator();
+            
+            // Add bot response
             addMessage(botResponse, 'bot');
             
             isWaitingForResponse = false;
-        }, 1000 + Math.random() * 1000); // Ritardo casuale tra 1-2 secondi
-    };
+        }, 1000 + Math.random() * 1000);
+    });
     
-    // Event Listeners
-    chatForm.addEventListener('submit', handleSendMessage);
+    // New chat button
+    newChatBtn.addEventListener('click', () => {
+        console.log('New chat button clicked');
+        createNewChat();
+    });
     
-    newChatButton.addEventListener('click', () => {
-        if (confirm('Vuoi iniziare una nuova chat? La conversazione corrente verrà persa.')) {
-            initChat();
+    // Sidebar toggle (mobile)
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+            document.body.classList.toggle('sidebar-open');
+        });
+    }
+    
+    // ===== INITIALIZATION =====
+    
+    // Initialize app
+    function init() {
+        console.log('Initializing app');
+        
+        const chats = getChats();
+        const chatIds = Object.keys(chats).sort((a, b) => {
+            return new Date(chats[b].timestamp) - new Date(chats[a].timestamp);
+        });
+        
+        if (chatIds.length > 0) {
+            loadChat(chatIds[0]);
+        } else {
+            createNewChat();
         }
-    });
+    }
     
-    sidebarToggle.addEventListener('click', () => {
-        document.body.classList.toggle('sidebar-open');
-    });
-    
-    // Inizializza
-    generateRoomId();
-    initChat();
+    // Start the app
+    init();
 });

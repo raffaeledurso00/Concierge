@@ -18,10 +18,8 @@
                     <i class="fas fa-plus"></i> Nuova chat
                 </button>
             </div>
-            <div class="sidebar-chats">
-                <div class="chat-history">
-                    <!-- Le chat precedenti verranno mostrate qui -->
-                </div>
+            <div class="sidebar-chats" id="sidebar-chats">
+                <!-- Le chat precedenti verranno mostrate qui -->
             </div>
             <div class="sidebar-footer">
                 <div class="user-info">
@@ -41,16 +39,6 @@
             
             <div class="messages-container" id="messages-container">
                 <!-- I messaggi appariranno qui -->
-                <div class="message-row bot-row">
-                    <div class="message bot-message">
-                        <div class="message-avatar">
-                            <i class="fas fa-concierge-bell"></i>
-                        </div>
-                        <div class="message-content">
-                            <p>Benvenuto a Villa Petriolo! Sono il tuo concierge digitale. Posso aiutarti con informazioni sul nostro ristorante, attività disponibili o servizi della struttura. Come posso esserti utile oggi?</p>
-                        </div>
-                    </div>
-                </div>
             </div>
             
             <div class="chat-input-container">
@@ -70,5 +58,20 @@
     </div>
 
     <script src="js/script.js"></script>
+<!-- Modal di conferma personalizzato -->
+<div id="custom-modal" class="custom-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Conferma</h3>
+        </div>
+        <div class="modal-body">
+            <p id="modal-message">Sei sicuro di voler eliminare questa chat?</p>
+        </div>
+        <div class="modal-footer">
+            <button id="modal-cancel-btn" class="modal-btn cancel-btn">Annulla</button>
+            <button id="modal-confirm-btn" class="modal-btn confirm-btn">Conferma</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>

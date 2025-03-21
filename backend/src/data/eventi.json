@@ -1,0 +1,103 @@
+{
+    "eventi_speciali": [
+      {
+        "nome": "Serata Degustazione Vini",
+        "descrizione": "Una serata dedicata alla degustazione dei migliori vini toscani, con la presenza di un sommelier esperto",
+        "data": "2025-04-15",
+        "orario": "19:00-22:00",
+        "luogo": "Cantina della Villa",
+        "prezzo": 65.00,
+        "prenotazioneRichiesta": true,
+        "postiDisponibili": 20
+      },
+      {
+        "nome": "Concerto Jazz sotto le Stelle",
+        "descrizione": "Una serata magica con musica jazz dal vivo nella terrazza panoramica della villa",
+        "data": "2025-04-22",
+        "orario": "21:00-23:30",
+        "luogo": "Terrazza Panoramica",
+        "prezzo": 40.00,
+        "prenotazioneRichiesta": true,
+        "postiDisponibili": 50
+      },
+      {
+        "nome": "Cooking Class: Pasta Fresca",
+        "descrizione": "Impara i segreti della pasta fresca fatta in casa con il nostro chef stellato",
+        "data": "2025-04-18",
+        "orario": "16:00-19:00",
+        "luogo": "Cucina della Villa",
+        "prezzo": 95.00,
+        "prenotazioneRichiesta": true,
+        "postiDisponibili": 12
+      }
+    ],
+    "eventi_settimanali": [
+      {
+        "nome": "Aperitivo al Tramonto",
+        "descrizione": "Aperitivo con vista sulle colline toscane, accompagnato da stuzzichini tradizionali",
+        "giorni": ["Venerdì", "Sabato"],
+        "orario": "18:00-20:00",
+        "luogo": "Bar della Piscina",
+        "prezzo": 25.00,
+        "prenotazioneRichiesta": false
+      },
+      {
+        "nome": "Yoga all'Alba",
+        "descrizione": "Sessione di yoga all'aperto tra gli ulivi, adatta a tutti i livelli",
+        "giorni": ["Lunedì", "Mercoledì", "Venerdì"],
+        "orario": "07:00-08:00",
+        "luogo": "Giardino degli Ulivi",
+        "prezzo": 20.00,
+        "prenotazioneRichiesta": true,
+        "postiDisponibili": 15
+      },
+      {
+        "nome": "Tour del Giardino Botanico",
+        "descrizione": "Visita guidata del nostro giardino botanico con specie rare e piante medicinali",
+        "giorni": ["Martedì", "Giovedì", "Domenica"],
+        "orario": "10:30-12:00",
+        "luogo": "Giardino Botanico",
+        "prezzo": 15.00,
+        "prenotazioneRichiesta": false
+      }
+    ],
+    "eventi_stagionali": [
+      {
+        "nome": "Festival della Primavera",
+        "descrizione": "Celebrazione dell'arrivo della primavera con eventi all'aperto, musica e prodotti locali",
+        "periodo": "15 Aprile - 15 Maggio",
+        "eventi_inclusi": [
+          "Mercato dei Fiori (ogni weekend)",
+          "Concerti all'Aperto (Sabato sera)",
+          "Laboratori per Bambini (Domenica mattina)"
+        ],
+        "prenotazioneRichiesta": false
+      },
+      {
+        "nome": "Vendemmia Partecipativa",
+        "descrizione": "Partecipa alla raccolta dell'uva e alla produzione del vino della tenuta",
+        "periodo": "Settembre",
+        "eventi_inclusi": [
+          "Raccolta dell'Uva nei Vigneti",
+          "Processo di Vinificazione",
+          "Degustazione dei Vini delle Annate Precedenti"
+        ],
+        "prezzo": 120.00,
+        "prenotazioneRichiesta": true,
+        "postiDisponibili": 25
+      },
+      {
+        "nome": "Raccolto dell'Olivo",
+        "descrizione": "Esperienza autentica di raccolta delle olive e produzione dell'olio extra vergine",
+        "periodo": "Novembre",
+        "eventi_inclusi": [
+          "Raccolta delle Olive",
+          "Visita al Frantoio",
+          "Degustazione di Olio Nuovo"
+        ],
+        "prezzo": 85.00,
+        "prenotazioneRichiesta": true,
+        "postiDisponibili": 20
+      }
+    ]
+  }

@@ -1,7 +1,6 @@
-// backend/src/controllers/chatController.js
-
 const menu = require('../data/menu.json');
 const attivita = require('../data/attivita.json');
+const eventi = require('../data/eventi.json'); // Aggiunta questa linea
 const MODEL_CONFIG = require('../config/modelConfig');
 const axios = require('axios');
 
@@ -27,7 +26,7 @@ const isRelevantQuestion = (message) => {
   const relevantTopics = [
     /hotel|villa|petriolo|camera|stanza|servizi|wifi|parcheggio|check|reception/i,
     /menu|ristorante|pranzo|cena|colazione|prenotazione|tavolo|piatti|vino|bar/i,
-    /attivit(a|à)|visita|tour|escursion|piscina|spa|massaggio|sport|tempo|meteo/i,
+    /attivit(a|à)|visita|tour|escursion|piscina|spa|massaggio|sport|tempo|meteo|eventi|event/i,
     /trasporto|taxi|transfer|bagagli|assistenza|emergenza|medico|farmacia/i
   ];
   return relevantTopics.some(topic => topic.test(message));
@@ -41,6 +40,9 @@ const getRelevantInfo = (message) => {
   }
   if (message.match(/attivit|tour|escursion|piscina|spa|massaggio|sport/i)) {
     info.attivita = attivita;
+  }
+  if (message.match(/eventi|event|festival|concerto|degustazione|corso|yoga|tour/i)) {
+    info.eventi = eventi;
   }
   return info;
 };
@@ -60,6 +62,14 @@ const getOllamaResponse = async (message, roomId = 'default-room') => {
     if (message.toLowerCase().includes('menu')) {
       return {
         response: "Il nostro ristorante offre piatti tipici toscani. ANTIPASTI: Tagliere di salumi toscani (€16), Panzanella (€12). PRIMI: Pappardelle al cinghiale (€18), Risotto ai funghi porcini (€20). SECONDI: Bistecca alla fiorentina (€8/etto), Cinghiale in umido (€22). DOLCI: Cantucci con Vin Santo (€10), Tiramisù della casa (€9). Desidera prenotare un tavolo o ha altre domande?",
+        context: []
+      };
+    }
+    
+    // Controllo per richieste di eventi
+    if (message.toLowerCase().match(/eventi|event/i)) {
+      return {
+        response: "A Villa Petriolo organizziamo diversi tipi di eventi. SPECIALI: Serata Degustazione Vini (15 aprile), Concerto Jazz sotto le Stelle (22 aprile), Cooking Class: Pasta Fresca (18 aprile). SETTIMANALI: Aperitivo al Tramonto (venerdì e sabato), Yoga all'Alba (lunedì, mercoledì, venerdì), Tour del Giardino Botanico (martedì, giovedì, domenica). STAGIONALI: Festival della Primavera (aprile-maggio), Vendemmia Partecipativa (settembre), Raccolto dell'Olivo (novembre). Quale evento le interessa maggiormente?",
         context: []
       };
     }
@@ -112,7 +122,7 @@ const getOllamaResponse = async (message, roomId = 'default-room') => {
 
       // Risposta generica di backup
       return { 
-        response: "Come concierge di Villa Petriolo, sono qui per aiutarla con qualsiasi necessità. Posso fornirle informazioni sul nostro ristorante, sulle attività disponibili o sui servizi della struttura. Come posso esserle utile oggi?",
+        response: "Come concierge di Villa Petriolo, sono qui per aiutarla con qualsiasi necessità. Posso fornirle informazioni sul nostro ristorante, sulle attività disponibili, sugli eventi organizzati o sui servizi della struttura. Come posso esserle utile oggi?",
         context: [] 
       };
     }
