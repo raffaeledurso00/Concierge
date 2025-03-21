@@ -1,50 +1,73 @@
-const axios = require('axios');
 const menu = require('../data/menu.json');
 const attivita = require('../data/attivita.json');
 
+// Memorizziamo l'ultimo intento per ogni utente
+const sessionContext = {};
+
+// Funzione per ottenere una risposta casuale da un array
+const getRandomResponse = (responses) => {
+  const index = Math.floor(Math.random() * responses.length);
+  return responses[index];
+};
+
 // Sistema di intenti migliorato
 const intents = [
-  // Altri intenti...
+  {
+    name: 'saluto',
+    priority: 1,
+    patterns: ['ciao', 'salve', 'buongiorno', 'buonasera', 'hey', 'saluti'],
+    responses: [
+      "Benvenuto a Villa Petriolo! Sono il tuo concierge digitale. Posso aiutarti con informazioni sul nostro ristorante, attività disponibili o servizi della struttura. Come posso esserti utile oggi?",
+      "Salve! Come posso rendere il tuo soggiorno a Villa Petriolo più piacevole oggi?",
+      "Buongiorno! Sono qui per aiutarti con qualsiasi informazione sulla villa e i servizi disponibili."
+    ]
+  },
   {
     name: 'menu_completo',
     priority: 4,
     patterns: ['menu completo', 'tutti i piatti', 'elenco piatti', 'carta completa'],
     response: (message) => {
-      let menuCompleto = "Ecco il nostro menu completo:\n\n";
+      let menuCompleto = "MENU DI VILLA PETRIOLO\n\n";
       
       // Antipasti
-      menuCompleto += "**ANTIPASTI**\n";
+      menuCompleto += "ANTIPASTI\n";
       menu.antipasti.forEach(piatto => {
-        menuCompleto += `- ${piatto.nome} (${piatto.prezzo}€): ${piatto.descrizione}\n`;
+        menuCompleto += `• ${piatto.nome} ${piatto.prezzo}€\n`;
       });
+      
+      menuCompleto += "\n";
       
       // Primi
-      menuCompleto += "\n**PRIMI PIATTI**\n";
+      menuCompleto += "PRIMI PIATTI\n";
       menu.primi.forEach(piatto => {
-        menuCompleto += `- ${piatto.nome} (${piatto.prezzo}€): ${piatto.descrizione}\n`;
+        menuCompleto += `• ${piatto.nome} ${piatto.prezzo}€\n`;
       });
       
+      menuCompleto += "\n";
+      
       // Secondi
-      menuCompleto += "\n**SECONDI PIATTI**\n";
+      menuCompleto += "SECONDI PIATTI\n";
       menu.secondi.forEach(piatto => {
         if (piatto.prezzoperetto) {
-          menuCompleto += `- ${piatto.nome} (${piatto.prezzo}€ all'etto): ${piatto.descrizione}\n`;
+          menuCompleto += `• ${piatto.nome} ${piatto.prezzo}€ all'etto\n`;
         } else {
-          menuCompleto += `- ${piatto.nome} (${piatto.prezzo}€): ${piatto.descrizione}\n`;
+          menuCompleto += `• ${piatto.nome} ${piatto.prezzo}€\n`;
         }
       });
       
+      menuCompleto += "\n";
+      
       // Dolci
-      menuCompleto += "\n**DOLCI**\n";
+      menuCompleto += "DOLCI\n";
       menu.dolci.forEach(piatto => {
-        menuCompleto += `- ${piatto.nome} (${piatto.prezzo}€): ${piatto.descrizione}\n`;
+        menuCompleto += `• ${piatto.nome} ${piatto.prezzo}€\n`;
       });
       
       menuCompleto += "\nPosso aiutarti a scegliere o vuoi informazioni su qualche piatto in particolare?";
       
       return menuCompleto;
     }
-  },
+},
   {
     name: 'menu_info',
     priority: 2,
@@ -55,12 +78,55 @@ const intents = [
       "Il menu del nostro ristorante celebra i sapori toscani con ingredienti locali e di stagione. Abbiamo antipasti tradizionali, primi piatti con pasta fatta in casa, secondi di carne e pesce, e dolci artigianali. Vuoi che ti mostri il menu completo?"
     ]
   },
-  // Altri intenti...
+  {
+    name: 'conferma',
+    priority: 3,
+    patterns: ['si', 'certo', 'ok', 'va bene', 'grazie', 'perfetto', 'procedi', 'mostrami'],
+    responses: [
+      "Mi dispiace, non sono sicuro di cosa stai confermando. Puoi essere più specifico sulla tua richiesta?",
+      "Vorrei aiutarti, ma ho bisogno di sapere cosa confermi esattamente. Puoi specificare meglio?"
+    ]
+  },
+  {
+    name: 'attivita_info',
+    priority: 2,
+    patterns: ['attività', 'fare', 'attivita', 'tour', 'visita', 'escursione', 'svago', 'divertimento'],
+    keyPhrases: ['cosa fare', 'cosa possiamo fare', 'attività disponibili', 'cosa c\'è da fare', 'quali attività'],
+    responses: [
+      "A Villa Petriolo offriamo molte attività. All'interno della struttura puoi partecipare a degustazioni di vini (45€), corsi di cucina toscana (85€) o rilassarti nella nostra spa (30€). All'esterno organizziamo tour in bicicletta (35€), passeggiate a cavallo (60€) e visite al frantoio (15€). Ti interessa qualcosa in particolare?",
+      "Le nostre attività includono esperienze all'interno della tenuta come degustazioni e corsi di cucina, e all'esterno con escursioni nelle colline toscane. Posso darti maggiori dettagli su qualche attività specifica?"
+    ]
+  },
+  {
+    name: 'default',
+    priority: 0,
+    patterns: [],
+    responses: [
+      "Mi dispiace, non ho informazioni specifiche su questo argomento. Posso aiutarti con il menu del ristorante, le attività disponibili o i servizi della struttura. Come posso esserti utile?",
+      "Non sono sicuro di aver capito correttamente. Posso fornirti informazioni sul nostro ristorante, le attività disponibili o i servizi generali della villa. Cosa ti interessa sapere?"
+    ]
+  }
 ];
 
 // Funzione per identificare l'intento con sistema di punteggio migliorato
-const identifyIntent = (message) => {
+const identifyIntent = (message, previousIntent) => {
   const lowerMessage = message.toLowerCase();
+  
+  // Gestione delle conferme basate sul contesto precedente
+  if (previousIntent === 'menu_info' && 
+      (lowerMessage.includes('si') || 
+       lowerMessage.includes('certo') || 
+       lowerMessage.includes('ok') || 
+       lowerMessage.includes('va bene') || 
+       lowerMessage.includes('grazie') || 
+       lowerMessage.includes('mostrami'))) {
+    
+    const menuCompleto = intents.find(i => i.name === 'menu_completo');
+    return { 
+      intent: 'menu_completo', 
+      response: menuCompleto.response(message)
+    };
+  }
   
   // Controllo specifico per menu completo
   if (lowerMessage.includes('menu completo') || 
@@ -75,6 +141,18 @@ const identifyIntent = (message) => {
     };
   }
   
+  // Controllo specifico per "che si mangia", "cosa si mangia"
+  if (lowerMessage.includes('che si mangia') || 
+      lowerMessage.includes('cosa si mangia') ||
+      lowerMessage.includes('cosa mangiamo') ||
+      lowerMessage.includes('che c') && lowerMessage.includes('menu')) {
+    const menuIntent = intents.find(i => i.name === 'menu_info');
+    return { 
+      intent: 'menu_info', 
+      response: getRandomResponse(menuIntent.responses)
+    };
+  }
+  
   // Normale valutazione di intenti per altri casi
   const scores = {};
   
@@ -85,9 +163,11 @@ const identifyIntent = (message) => {
     scores[intent.name] = 0;
     
     // Controlla pattern singoli
-    for (const pattern of intent.patterns || []) {
-      if (lowerMessage.includes(pattern)) {
-        scores[intent.name] += 1 * (intent.priority || 1);
+    if (intent.patterns) {
+      for (const pattern of intent.patterns) {
+        if (lowerMessage.includes(pattern)) {
+          scores[intent.name] += 1 * (intent.priority || 1);
+        }
       }
     }
     
@@ -104,17 +184,14 @@ const identifyIntent = (message) => {
   console.log('Punteggi intenti:', scores);
   
   // Trova l'intento con il punteggio più alto
-  const bestIntent = Object.keys(scores).reduce((a, b) => 
-    scores[a] > scores[b] ? a : b, Object.keys(scores)[0]
-  );
+  let bestIntent = 'default';
+  let highestScore = 0;
   
-  // Se nessun intento ha un punteggio positivo, usa l'intento predefinito
-  if (!bestIntent || scores[bestIntent] === 0) {
-    const defaultIntent = intents.find(i => i.name === 'default');
-    return { 
-      intent: 'default', 
-      response: getRandomResponse(defaultIntent.responses) 
-    };
+  for (const intent in scores) {
+    if (scores[intent] > highestScore) {
+      highestScore = scores[intent];
+      bestIntent = intent;
+    }
   }
   
   // Ottieni l'intento selezionato
@@ -128,16 +205,6 @@ const identifyIntent = (message) => {
     };
   }
   
-  // Per intenti con modificatori
-  if (selectedIntent.modifiers) {
-    for (const [modifier, response] of Object.entries(selectedIntent.modifiers)) {
-      if (lowerMessage.includes(modifier)) {
-        return { intent: selectedIntent.name, response };
-      }
-    }
-    return { intent: selectedIntent.name, response: selectedIntent.default_response };
-  }
-  
   // Per intenti con array di risposte
   return { 
     intent: selectedIntent.name, 
@@ -145,7 +212,6 @@ const identifyIntent = (message) => {
   };
 };
 
-// Resto del controller...
 exports.processMessage = async (req, res) => {
   try {
     const { message, roomId } = req.body;
@@ -154,11 +220,30 @@ exports.processMessage = async (req, res) => {
       return res.status(400).json({ error: 'Il messaggio è richiesto' });
     }
     
-    console.log(`Ricevuto messaggio da camera ${roomId || 'sconosciuta'}: ${message}`);
+    const sessionId = roomId || 'guest';
+    const previousIntent = sessionContext[sessionId] || null;
     
-    // Gestione contesto
-    // Se la domanda è "sono tutti i piatti?" o simile dopo una domanda sul menu
+    console.log(`Ricevuto messaggio da camera ${sessionId}: ${message}`);
+    console.log(`Contesto precedente: ${previousIntent}`);
+    
+    // Gestione contesto per domande di follow-up
     const lowerMessage = message.toLowerCase();
+    
+    if (previousIntent === 'menu_info' && 
+        (lowerMessage.includes('si') || 
+         lowerMessage.includes('certo') || 
+         lowerMessage.includes('va bene') || 
+         lowerMessage === 'ok' ||
+         lowerMessage.includes('grazie'))) {
+        
+      const menuCompleto = intents.find(i => i.name === 'menu_completo');
+      if (menuCompleto) {
+        sessionContext[sessionId] = 'menu_completo';
+        return res.json({ response: menuCompleto.response(message) });
+      }
+    }
+    
+    // Gestione standard per altri tipi di domande
     if ((lowerMessage.includes('tutti') && lowerMessage.includes('piatti')) || 
         lowerMessage === 'sono tutti?' || 
         lowerMessage === 'è tutto?' || 
@@ -166,13 +251,17 @@ exports.processMessage = async (req, res) => {
         
       const menuCompleto = intents.find(i => i.name === 'menu_completo');
       if (menuCompleto) {
+        sessionContext[sessionId] = 'menu_completo';
         return res.json({ response: menuCompleto.response(message) });
       }
     }
     
     // Normale identificazione dell'intento
-    const { intent, response } = identifyIntent(message);
+    const { intent, response } = identifyIntent(message, previousIntent);
     console.log(`Intento identificato: ${intent}`);
+    
+    // Salva il contesto per la prossima interazione
+    sessionContext[sessionId] = intent;
     
     res.json({ response });
   } catch (error) {
