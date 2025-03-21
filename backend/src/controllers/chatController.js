@@ -22,7 +22,45 @@ const getSimpleResponse = (message) => {
 };
 
 // Funzione per verificare se la domanda è pertinente
-const isRelevantQuestion = (message) => {
+// Mantieni un registro delle ultime domande e risposte per ogni stanza
+const conversationContexts = {};
+
+// Migliora la funzione isRelevantQuestion per considerare il contesto
+const isRelevantQuestion = (message, roomId = 'default-room') => {
+  // Se è la prima domanda, usa la logica standard
+  if (!conversationContexts[roomId] || conversationContexts[roomId].length === 0) {
+    const relevantTopics = [
+      /hotel|villa|petriolo|camera|stanza|servizi|wifi|parcheggio|check|reception/i,
+      /menu|ristorante|pranzo|cena|colazione|prenotazione|tavolo|piatti|vino|bar/i,
+      /attivit(a|à)|visita|tour|escursion|piscina|spa|massaggio|sport|tempo|meteo|eventi|event/i,
+      /trasporto|taxi|transfer|bagagli|assistenza|emergenza|medico|farmacia/i
+    ];
+    return relevantTopics.some(topic => topic.test(message));
+  }
+  
+  // Ottieni l'ultima risposta e domanda dalla cronologia
+  const lastBotResponse = conversationContexts[roomId].filter(msg => msg.sender === 'bot').pop();
+  
+  // Se l'ultima risposta del bot conteneva una domanda o una richiesta di conferma
+  if (lastBotResponse && (
+      lastBotResponse.text.includes("?") || 
+      lastBotResponse.text.includes("Preferite") || 
+      lastBotResponse.text.includes("interessa")
+     )) {
+    return true; // Considera qualsiasi risposta come pertinente
+  }
+  
+  // Se l'ultima risposta menzionava attività, passeggiate, ecc.
+  if (lastBotResponse && (
+      lastBotResponse.text.match(/passeggiata|tour|giardino|attivit|escursion/i)
+     )) {
+    // Se la risposta attuale è breve e potrebbe essere una preferenza
+    if (message.length < 50 && message.match(/autonomo|guidat|preferis|si|no|vorrei|interessat/i)) {
+      return true;
+    }
+  }
+  
+  // Altrimenti usa la logica standard
   const relevantTopics = [
     /hotel|villa|petriolo|camera|stanza|servizi|wifi|parcheggio|check|reception/i,
     /menu|ristorante|pranzo|cena|colazione|prenotazione|tavolo|piatti|vino|bar/i,
@@ -32,28 +70,84 @@ const isRelevantQuestion = (message) => {
   return relevantTopics.some(topic => topic.test(message));
 };
 
-// Funzione per ottenere informazioni rilevanti
-const getRelevantInfo = (message) => {
-  const info = {};
-  if (message.match(/menu|ristorante|pranzo|cena|colazione|piatti|vino/i)) {
-    info.menu = menu;
+// Nella funzione processMessage, aggiorna il contesto
+exports.processMessage = async (req, res) => {
+  try {
+    const { message, roomId = 'default-room' } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: 'Il messaggio è richiesto' });
+    }
+
+    // Inizializza il contesto se non esiste
+    if (!conversationContexts[roomId]) {
+      conversationContexts[roomId] = [];
+    }
+    
+    // Aggiungi la domanda dell'utente al contesto
+    conversationContexts[roomId].push({ sender: 'user', text: message });
+    
+    // Mantieni solo le ultime 10 interazioni
+    while (conversationContexts[roomId].length > 10) {
+      conversationContexts[roomId].shift();
+    }
+    
+    // Ottieni risposta considerando il contesto
+    const result = await getOllamaResponse(message, roomId);
+    
+    // Aggiungi la risposta del bot al contesto
+    conversationContexts[roomId].push({ sender: 'bot', text: result.response });
+    
+    res.json({ response: result.response, roomId });
+  } catch (error) {
+    console.error('Errore nel processamento del messaggio:', error);
+    res.status(500).json({ 
+      error: 'Si è verificato un errore nell\'elaborazione della richiesta',
+      details: error.message 
+    });
   }
-  if (message.match(/attivit|tour|escursion|piscina|spa|massaggio|sport/i)) {
-    info.attivita = attivita;
-  }
-  if (message.match(/eventi|event|festival|concerto|degustazione|corso|yoga|tour/i)) {
-    info.eventi = eventi;
-  }
-  return info;
 };
 
-// Cache per i contesti di conversazione
-const conversationContexts = {};
-
-// Funzione per ottenere risposta da Ollama
-// Aumenta il timeout della richiesta
+// Modifica la risposta per domande sulle passeggiate autonome
 const getOllamaResponse = async (message, roomId = 'default-room') => {
   try {
+    // Controlla se la domanda è pertinente
+    if (!isRelevantQuestion(message, roomId)) {
+      return { 
+        response: "Mi scuso, ma posso rispondere solo a domande relative ai servizi dell'hotel.",
+        context: [] 
+      };
+    }
+    
+    // Recupera il contesto della conversazione
+    const context = conversationContexts[roomId] || [];
+    
+    // Controlla se l'utente ha appena risposto a una domanda sulle passeggiate
+    const lastBotMessage = context.filter(msg => msg.sender === 'bot').pop();
+    const isAboutWalking = lastBotMessage && lastBotMessage.text.match(/passeggiata|tour|percorsi/i);
+    
+    // Se l'utente chiede qualcosa di autonomo dopo una domanda sulle passeggiate
+    if (isAboutWalking && message.match(/autonomo|da soli|libero|senza guida/i)) {
+      return { 
+        response: "Perfetto! Per una passeggiata autonoma, vi consiglio i nostri percorsi segnalati nella tenuta. Abbiamo tre sentieri principali: il 'Sentiero degli Ulivi' (1,5 km, facile), il 'Percorso Panoramico' (3 km, moderato) e il 'Sentiero del Bosco' (4 km, moderato). Alla reception potete ritirare una mappa dettagliata con tutti i percorsi. Desiderate che vi prepariamo un cestino picnic da portare con voi durante la passeggiata?",
+        context: [] 
+      };
+    }
+    
+    // Il resto del codice esistente...
+    
+    // Verifica il contesto della conversazione
+    const isAboutWeather = conversationHistory[roomId].some(msg => 
+      msg.match(/tempo|meteo|pioggia|sole|temperatura/i));
+    
+    // Risposta specifica per domande generiche dopo aver parlato del tempo o passeggiate
+    if (message.match(/che altro|cosa possiamo fare|suggerimenti/i) && 
+        (isAboutWeather || isAboutWalking)) {
+      return { 
+        response: "Se siete interessati a fare una passeggiata, posso suggerirvi il Tour del Giardino Botanico che si tiene ogni martedì, giovedì e domenica alle 10:30. In alternativa, offriamo anche passeggiate a cavallo nei dintorni (€60, 2 ore) o tour in bicicletta delle colline toscane (€35, 4 ore). Se preferite un'attività più rilassante, potrebbe interessarvi lo Yoga all'Alba o l'Aperitivo al Tramonto sulla nostra terrazza panoramica. Quale di queste attività vi interessa di più?",
+        context: [] 
+      };
+    }
     // Controllo per risposte semplici e personalizzate
     const simpleResponse = getSimpleResponse(message);
     if (simpleResponse) return { response: simpleResponse, context: [] };
@@ -63,6 +157,28 @@ const getOllamaResponse = async (message, roomId = 'default-room') => {
       return {
         response: "Il nostro ristorante offre piatti tipici toscani. ANTIPASTI: Tagliere di salumi toscani (€16), Panzanella (€12). PRIMI: Pappardelle al cinghiale (€18), Risotto ai funghi porcini (€20). SECONDI: Bistecca alla fiorentina (€8/etto), Cinghiale in umido (€22). DOLCI: Cantucci con Vin Santo (€10), Tiramisù della casa (€9). Desidera prenotare un tavolo o ha altre domande?",
         context: []
+      };
+    }
+    // Nel blocco di codice che gestisce le domande sul meteo:
+    // Aggiungi al controller per gestire domande sul tempo
+    if (message.toLowerCase().match(/tempo|meteo|pioggia|sole|temperatura/i) && 
+        message.toLowerCase().match(/passeggiata|camminare|camminata|escursion/i)) {
+      
+      // Risposta predefinita completa che combina informazioni sul tempo e suggerimenti di attività
+      return { 
+        response: "Domani pomeriggio è previsto tempo soleggiato con poche nuvole, temperatura massima 22°C. Sarebbe perfetto per una passeggiata. Vi consiglio il nostro Tour del Giardino Botanico (disponibile martedì, giovedì e domenica), oppure la Passeggiata a Cavallo (€60, 2 ore) se desiderate un'esperienza più particolare. Abbiamo anche percorsi segnalati nella tenuta che potete esplorare liberamente. Preferite un'opzione guidata o autonoma?",
+        context: [] 
+      };
+    }
+
+    // Aggiungi gestione specifica per domande di follow-up dopo aver parlato del tempo
+    if (message.toLowerCase().match(/che altro|cosa (possiamo|potremmo) fare|alternative|consigli/i) && 
+        conversationHistory[roomId].some(msg => msg.match(/tempo|meteo|passeggiata|camminare/i))) {
+      
+      // Risposta predefinita per suggerimenti dopo aver parlato del tempo
+      return { 
+        response: "Oltre alle passeggiate, potete partecipare all'Aperitivo al Tramonto sulla nostra terrazza panoramica (disponibile venerdì e sabato, €25), oppure il Tour in Bicicletta delle colline circostanti (€35, 4 ore). Se preferite attività culturali, abbiamo in programma un Concerto Jazz sotto le Stelle il 22 aprile, o una Serata Degustazione Vini il 15 aprile. Quale di queste attività vi interessa maggiormente?",
+        context: [] 
       };
     }
     
