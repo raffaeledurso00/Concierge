@@ -1,5 +1,6 @@
 # Dipendenze
-/node_modules
+node_modules/
+*/node_modules/
 
 # Ambiente
 .env
@@ -10,8 +11,11 @@
 # Build
 /build
 /dist
+*/build/
+*/dist/
 
 # Log
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -25,3 +29,19 @@ yarn-error.log*
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+# Temporanei
+tmp/
+temp/
+
+# Cache
+.cache/
+.npm
+.eslintcache
+
+# Coverage
+coverage/
+
+# Misc
+.DS_Store
+*.pem

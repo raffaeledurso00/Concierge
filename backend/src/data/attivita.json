@@ -1,0 +1,72 @@
+{
+  "attivitaInterne": [
+    {
+      "nome": "Degustazione di vini",
+      "descrizione": "Degustazione guidata dei vini prodotti nella nostra tenuta",
+      "durata": "2 ore",
+      "prezzo": 45.00,
+      "orari": ["10:00", "16:00"],
+      "prenotazioneRichiesta": true
+    },
+    {
+      "nome": "Corso di cucina toscana",
+      "descrizione": "Impara a preparare piatti tradizionali toscani con il nostro chef",
+      "durata": "3 ore",
+      "prezzo": 85.00,
+      "orari": ["15:00"],
+      "prenotazioneRichiesta": true
+    },
+    {
+      "nome": "Accesso alla spa",
+      "descrizione": "Relax nella nostra area benessere con sauna, bagno turco e piscina riscaldata",
+      "durata": "accesso giornaliero",
+      "prezzo": 30.00,
+      "orari": ["09:00-20:00"],
+      "prenotazioneRichiesta": false
+    }
+  ],
+  "attivitaEsterne": [
+    {
+      "nome": "Tour in bicicletta",
+      "descrizione": "Esplora le colline toscane con le nostre biciclette a noleggio",
+      "durata": "4 ore",
+      "prezzo": 35.00,
+      "orari": ["09:00", "14:00"],
+      "prenotazioneRichiesta": true
+    },
+    {
+      "nome": "Passeggiata a cavallo",
+      "descrizione": "Scopri i sentieri della tenuta a cavallo con una guida esperta",
+      "durata": "2 ore",
+      "prezzo": 60.00,
+      "orari": ["10:00", "16:00"],
+      "prenotazioneRichiesta": true
+    },
+    {
+      "nome": "Visita al frantoio",
+      "descrizione": "Scopri come produciamo il nostro olio extravergine d'oliva",
+      "durata": "1 ora",
+      "prezzo": 15.00,
+      "orari": ["11:00", "15:00", "17:00"],
+      "prenotazioneRichiesta": false
+    }
+  ],
+  "escursioni": [
+    {
+      "nome": "Tour di Firenze",
+      "descrizione": "Visita guidata del centro storico di Firenze con trasporto incluso",
+      "durata": "giornata intera",
+      "prezzo": 120.00,
+      "giorni": ["Martedì", "Venerdì"],
+      "prenotazioneRichiesta": true
+    },
+    {
+      "nome": "Degustazione in cantina locale",
+      "descrizione": "Visita ad una cantina storica della zona con degustazione di vini pregiati",
+      "durata": "mezza giornata",
+      "prezzo": 75.00,
+      "giorni": ["Mercoledì", "Sabato"],
+      "prenotazioneRichiesta": true
+    }
+  ]
+}

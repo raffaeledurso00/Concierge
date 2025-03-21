@@ -1,0 +1,59 @@
+{
+  "antipasti": [
+    {
+      "nome": "Tagliere di salumi toscani",
+      "descrizione": "Selezione di salumi locali con crostini di pane fatto in casa",
+      "prezzo": 16.00,
+      "ingredienti": ["Prosciutto toscano", "Finocchiona", "Salame toscano", "Crostini"]
+    },
+    {
+      "nome": "Panzanella",
+      "descrizione": "Insalata tradizionale toscana con pane raffermo, pomodori e basilico",
+      "prezzo": 12.00,
+      "ingredienti": ["Pane toscano", "Pomodori", "Cipolla rossa", "Basilico", "Olio extra vergine"]
+    }
+  ],
+  "primi": [
+    {
+      "nome": "Pappardelle al cinghiale",
+      "descrizione": "Pasta fresca con ragù di cinghiale locale",
+      "prezzo": 18.00,
+      "ingredienti": ["Pasta all'uovo", "Cinghiale", "Vino rosso", "Pomodoro", "Erbe aromatiche"]
+    },
+    {
+      "nome": "Risotto ai funghi porcini",
+      "descrizione": "Risotto cremoso con funghi porcini freschi del bosco",
+      "prezzo": 20.00,
+      "ingredienti": ["Riso Carnaroli", "Funghi porcini", "Brodo vegetale", "Parmigiano", "Vino bianco"]
+    }
+  ],
+  "secondi": [
+    {
+      "nome": "Bistecca alla fiorentina",
+      "descrizione": "Classica bistecca di manzo Chianina cotta alla griglia",
+      "prezzo": 8.00,
+      "prezzoperetto": true,
+      "ingredienti": ["Bistecca di Chianina", "Sale", "Pepe", "Olio extravergine d'oliva"]
+    },
+    {
+      "nome": "Cinghiale in umido",
+      "descrizione": "Cinghiale locale stufato con erbe aromatiche e olive",
+      "prezzo": 22.00,
+      "ingredienti": ["Cinghiale", "Vino rosso", "Pomodoro", "Erbe aromatiche", "Olive"]
+    }
+  ],
+  "dolci": [
+    {
+      "nome": "Cantucci con Vin Santo",
+      "descrizione": "Biscotti tradizionali toscani serviti con vino dolce da dessert",
+      "prezzo": 10.00,
+      "ingredienti": ["Farina", "Mandorle", "Zucchero", "Vin Santo"]
+    },
+    {
+      "nome": "Tiramisù della casa",
+      "descrizione": "Dolce italiano classico fatto con mascarpone e caffè",
+      "prezzo": 9.00,
+      "ingredienti": ["Savoiardi", "Mascarpone", "Caffè", "Cacao", "Uova"]
+    }
+  ]
+}

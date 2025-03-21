@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Villa Petriolo - Concierge Digitale</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-sidebar">
+            <div class="sidebar-header">
+                <img src="img/logo.png" alt="Villa Petriolo" class="logo">
+            </div>
+            <div class="new-chat">
+                <button id="new-chat-btn">
+                    <i class="fas fa-plus"></i> Nuova chat
+                </button>
+            </div>
+            <div class="sidebar-chats">
+                <div class="chat-history">
+                    <!-- Le chat precedenti verranno mostrate qui -->
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Ospite</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-main">
+            <div class="chat-header">
+                <div class="mobile-menu">
+                    <i class="fas fa-bars" id="sidebar-toggle"></i>
+                </div>
+                <h1>Concierge Digitale</h1>
+            </div>
+            
+            <div class="messages-container" id="messages-container">
+                <!-- I messaggi appariranno qui -->
+                <div class="message-row bot-row">
+                    <div class="message bot-message">
+                        <div class="message-avatar">
+                            <i class="fas fa-concierge-bell"></i>
+                        </div>
+                        <div class="message-content">
+                            <p>Benvenuto a Villa Petriolo! Sono il tuo concierge digitale. Posso aiutarti con informazioni sul nostro ristorante, attività disponibili o servizi della struttura. Come posso esserti utile oggi?</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <form id="chat-form">
+                    <div class="input-wrapper">
+                        <input type="text" id="message-input" placeholder="Scrivi un messaggio..." autocomplete="off">
+                        <button type="submit" id="send-button">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="disclaimer">
+                        <p>Villa Petriolo Concierge: per aiutarti con il tuo soggiorno.</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
