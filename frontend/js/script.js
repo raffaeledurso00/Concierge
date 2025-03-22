@@ -1,5 +1,5 @@
 /**
- * script.js - Funzionalità principale del Concierge Digitale
+ * script.js - Modifica mirata per risolvere il problema del pulsante "Nuova chat"
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const welcomeMessage = document.getElementById('welcome-message');
     const currentTopicIndicator = document.getElementById('current-topic');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const chatSidebar = document.querySelector('.chat-sidebar');
     
     // State
     let currentChatId = null;
@@ -29,7 +30,8 @@ document.addEventListener('DOMContentLoaded', function() {
         messageInput: !!messageInput,
         newChatBtn: !!newChatBtn,
         sidebarChats: !!sidebarChats,
-        sidebarOverlay: !!sidebarOverlay
+        sidebarOverlay: !!sidebarOverlay,
+        chatSidebar: !!chatSidebar
     });
 
     // ===== UTILITY FUNCTIONS =====
@@ -50,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Funzione semplificata per gestire i click dell'interfaccia mobile
+    // Funzione migliorata per gestire i click dell'interfaccia mobile
     function setupMobileUI() {
         // Gestione del pulsante toggle
         if (sidebarToggle) {
@@ -69,6 +71,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sidebarOverlay) {
             sidebarOverlay.addEventListener('click', function() {
                 closeSidebar();
+            });
+        }
+        
+        // CORREZIONE: Impedisci che i clic sulla sidebar la chiudano
+        if (chatSidebar) {
+            chatSidebar.addEventListener('click', function(e) {
+                e.stopPropagation(); // Ferma la propagazione dell'evento
             });
         }
         
@@ -141,9 +150,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update UI
         updateChatList();
         updateTopicIndicator(null);
-        
-        // Chiudi la sidebar dopo aver creato una nuova chat (su mobile)
-        closeSidebar();
     }
     
     // Load a chat
@@ -183,9 +189,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update UI
         updateChatList();
-        
-        // Chiudi la sidebar dopo la selezione (solo su mobile)
-        closeSidebar();
     }
     
     // Delete a chat
@@ -597,11 +600,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }, typingDelay);
     });
     
-    // New chat button
-    newChatBtn.addEventListener('click', () => {
-        console.log('New chat button clicked');
-        createNewChat();
-    });
+    // SOLUZIONE: Rimuoviamo l'event listener esistente e ne aggiungiamo uno nuovo
+    if (newChatBtn) {
+        // Rimuovi eventuali listener precedenti
+        const newChatBtnClone = newChatBtn.cloneNode(true);
+        if (newChatBtn.parentNode) {
+            newChatBtn.parentNode.replaceChild(newChatBtnClone, newChatBtn);
+        }
+        
+        // Aggiungi il nuovo listener con gestione corretta degli eventi
+        newChatBtnClone.addEventListener('click', function(e) {
+            // Ferma la propagazione dell'evento per evitare che raggiunga l'overlay
+            e.stopPropagation();
+            
+            console.log('New chat button clicked with fixed handler');
+            
+            // Crea una nuova chat
+            createNewChat();
+            
+            // Chiudi la sidebar dopo aver creato la chat (solo su mobile)
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        });
+    }
     
     // ===== INITIALIZATION =====
     
