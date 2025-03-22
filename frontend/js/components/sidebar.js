@@ -82,28 +82,30 @@ const SidebarComponent = {
    */
   setupDeleteButtons: function() {
     const deleteBtns = document.querySelectorAll('.delete-chat-btn');
+    
     deleteBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      // Usa onclick diretto invece di addEventListener
+      btn.onclick = (e) => {
         e.stopPropagation();
-        const chatId = btn.getAttribute('data-id');
-        console.log('Delete button clicked for chat ID:', chatId);
+        e.preventDefault();
         
-        // Usa il modale personalizzato o chiedi conferma
-        if (typeof window.ModalComponent?.showModal === 'function') {
-          window.ModalComponent.showModal('Sei sicuro di voler eliminare questa chat?', () => {
-            this.performDeleteChat(chatId);
-          });
-        } else {
-          // Fallback con confirm standard
-          if (confirm('Sei sicuro di voler eliminare questa chat?')) {
-            this.performDeleteChat(chatId);
+        const chatId = btn.getAttribute('data-id');
+        
+        if (confirm('Sei sicuro di voler eliminare questa chat?')) {
+          // Esegue direttamente l'operazione invece di usare un callback
+          const chats = window.StorageManager.getChats();
+          delete chats[chatId];
+          window.StorageManager.saveChats(chats);
+          
+          // Se era la chat corrente, crea una nuova chat
+          if (window.ChatCore.state.currentChatId === chatId) {
+            window.ChatCore.createNewChat();
+          } else {
+            // Aggiorna solo la sidebar
+            this.updateChatList(window.ChatCore.state.currentChatId);
           }
         }
-      });
-      
-      // Assicurati che il pulsante sia cliccabile
-      btn.style.pointerEvents = 'auto';
-      btn.style.cursor = 'pointer';
+      };
     });
   },
   
