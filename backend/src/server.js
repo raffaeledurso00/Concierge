@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const chatRoutes = require('./routes/chatRoutes');
-const aiService = require('./services/aiService');
+const aiService = require('./services/ai');
 
 // Carica variabili d'ambiente
 dotenv.config();
