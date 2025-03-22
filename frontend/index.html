@@ -152,5 +152,91 @@
     
     <!-- Utilizza il nuovo file main.js che carica tutti gli altri moduli -->
     <script src="js/main.js"></script>
+    <!-- Modifica da aggiungere in index.html prima della chiusura del body -->
+<script>
+    // Preloader initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        // Verifica se GSAP è disponibile
+        if (typeof gsap !== 'undefined') {
+            const preloader = document.getElementById('js-preloader');
+            const loadingCircle = document.getElementById('loading-circle');
+            const preloaderLogo = document.getElementById('preloader-logo');
+            const chatContainer = document.querySelector('.chat-container');
+            
+            if (preloader && loadingCircle && preloaderLogo && chatContainer) {
+                chatContainer.style.opacity = '0';
+                
+                // Animazione del cerchio
+                gsap.fromTo(loadingCircle, 
+                    { strokeDashoffset: 565.48 }, 
+                    { 
+                        strokeDashoffset: 0, 
+                        duration: 2.5, 
+                        ease: "power2.inOut",
+                        onComplete: finishLoading
+                    }
+                );
+                
+                // Animazione del logo
+                gsap.to(preloaderLogo, {
+                    scale: 1.05,
+                    duration: 1,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut"
+                });
+                
+                // Timeout di sicurezza
+                setTimeout(() => {
+                    if (preloader.style.display !== 'none') {
+                        finishLoading();
+                    }
+                }, 5000);
+                
+                function finishLoading() {
+                    gsap.killTweensOf(preloaderLogo);
+                    
+                    gsap.to(preloader, {
+                        autoAlpha: 0,
+                        duration: 0.8,
+                        onComplete: () => {
+                            preloader.style.display = 'none';
+                            
+                            gsap.to(chatContainer, {
+                                opacity: 1,
+                                duration: 0.6,
+                                onComplete: () => {
+                                    const event = new Event('appReady');
+                                    document.dispatchEvent(event);
+                                }
+                            });
+                        }
+                    });
+                }
+            } else {
+                // Fallback se gli elementi non sono trovati
+                if (preloader) preloader.style.display = 'none';
+                if (chatContainer) chatContainer.style.opacity = '1';
+                
+                setTimeout(() => {
+                    const event = new Event('appReady');
+                    document.dispatchEvent(event);
+                }, 500);
+            }
+        } else {
+            // Fallback se GSAP non è disponibile
+            const preloader = document.getElementById('js-preloader');
+            const chatContainer = document.querySelector('.chat-container');
+            
+            if (preloader) preloader.style.display = 'none';
+            if (chatContainer) chatContainer.style.opacity = '1';
+            
+            setTimeout(() => {
+                const event = new Event('appReady');
+                document.dispatchEvent(event);
+            }, 500);
+        }
+    });
+    </script>
 </body>
 </html>

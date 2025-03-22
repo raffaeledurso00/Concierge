@@ -18,25 +18,31 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Villa Petriolo Concierge Digitale - Loading application');
-    
-    // Funzione di callback quando tutti i moduli sono stati caricati
-    const onAllModulesLoaded = function() {
+  console.log('Villa Petriolo Concierge Digitale - Loading application');
+  
+  // Funzione di callback quando tutti i moduli sono stati caricati
+  const onAllModulesLoaded = function() {
       console.log('All modules loaded successfully');
       
-      // Se il preloader è già completato, inizializza direttamente
-      if (!document.getElementById('js-preloader') || 
-          document.getElementById('js-preloader').style.display === 'none') {
-        console.log('Preloader already completed, initializing app directly');
-        
-        // Trigger appReady event
-        const event = new Event('appReady');
-        document.dispatchEvent(event);
+      // Verifica se il preloader esiste ancora
+      const preloader = document.getElementById('js-preloader');
+      
+      // Se il preloader non esiste o è già stato nascosto, inizializza direttamente
+      if (!preloader || preloader.style.display === 'none') {
+          console.log('Preloader already completed, initializing app directly');
+          
+          setTimeout(() => {
+              // Trigger appReady event
+              const event = new Event('appReady');
+              document.dispatchEvent(event);
+          }, 100); // Piccolo ritardo per garantire che tutti i moduli siano pronti
+      } else {
+          console.log('Waiting for preloader completion');
       }
-    };
-    
-    // Lista dei file JavaScript da caricare in ordine
-    const jsFiles = [
+  };
+  
+  // Lista dei file JavaScript da caricare in ordine
+  const jsFiles = [
       // Configurazione
       'js/config.js',
       
@@ -63,40 +69,37 @@ document.addEventListener('DOMContentLoaded', function() {
       'js/core/chat.js',
       'js/core/events.js',
       'js/core/init.js'
-    ];
-    
-    // Il preloader viene gestito direttamente nel tag <script> in index.html
-    // per garantire che venga eseguito prima di qualsiasi altro script
-    
-    // Tieni traccia dei file caricati
-    let loadedCount = 0;
-    
-    // Carica ciascun file in sequenza
-    jsFiles.forEach(function(src) {
+  ];
+  
+  // Tieni traccia dei file caricati
+  let loadedCount = 0;
+  
+  // Carica ciascun file in sequenza
+  jsFiles.forEach(function(src) {
       const script = document.createElement('script');
       script.src = src;
       script.async = false;  // Mantieni l'ordine di caricamento
       
       script.onload = function() {
-        loadedCount++;
-        console.log(`Loaded ${src} (${loadedCount}/${jsFiles.length})`);
-        
-        // Se tutti i file sono stati caricati, chiama il callback
-        if (loadedCount === jsFiles.length) {
-          onAllModulesLoaded();
-        }
+          loadedCount++;
+          console.log(`Loaded ${src} (${loadedCount}/${jsFiles.length})`);
+          
+          // Se tutti i file sono stati caricati, chiama il callback
+          if (loadedCount === jsFiles.length) {
+              onAllModulesLoaded();
+          }
       };
       
       script.onerror = function() {
-        console.error(`Failed to load ${src}`);
-        loadedCount++;
-        
-        // Continua comunque anche in caso di errore
-        if (loadedCount === jsFiles.length) {
-          onAllModulesLoaded();
-        }
+          console.error(`Failed to load ${src}`);
+          loadedCount++;
+          
+          // Continua comunque anche in caso di errore
+          if (loadedCount === jsFiles.length) {
+              onAllModulesLoaded();
+          }
       };
       
       document.body.appendChild(script);
-    });
   });
+});

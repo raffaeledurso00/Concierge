@@ -2,17 +2,17 @@
 // Gestione dell'animazione di caricamento iniziale
 
 const PreloaderManager = {
-    /**
-     * Inizializza e avvia il preloader
-     */
-    init: function() {
+  /**
+   * Inizializza e avvia il preloader
+   */
+  init: function() {
       console.log('Preloader initialization');
       
       // Verifica se GSAP è stato caricato correttamente
       if (typeof gsap === 'undefined') {
-        console.error('GSAP non è stato caricato. Il preloader non funzionerà correttamente.');
-        this.hidePreloader();
-        return;
+          console.error('GSAP non è stato caricato. Il preloader non funzionerà correttamente.');
+          this.hidePreloader();
+          return;
       }
       
       // Riferimenti elementi DOM
@@ -23,9 +23,9 @@ const PreloaderManager = {
       
       // Verifica che tutti gli elementi necessari esistano
       if (!this.preloader || !this.loadingCircle || !this.preloaderLogo || !this.chatContainer) {
-        console.error('Elementi DOM mancanti. Il preloader non funzionerà correttamente.');
-        this.hidePreloader();
-        return;
+          console.error('Elementi DOM mancanti. Il preloader non funzionerà correttamente.');
+          this.hidePreloader();
+          return;
       }
       
       // Nascondi la chat container durante il preloader
@@ -36,41 +36,39 @@ const PreloaderManager = {
       
       // Gestione degli errori: se qualcosa va storto, nascondi il preloader dopo 5 secondi
       this.setupTimeoutSafety();
-    },
-    
-    /**
-     * Avvia l'animazione del preloader
-     */
-    startAnimation: function() {
+  },
+  
+  /**
+   * Avvia l'animazione del preloader
+   */
+  startAnimation: function() {
       const timeline = gsap.timeline();
       
       // Animazione del cerchio di caricamento
       timeline.fromTo(this.loadingCircle, 
-        { strokeDashoffset: 565.48 },
-        { 
-          strokeDashoffset: 0, 
-          duration: 2.5, 
-          ease: "power2.inOut",
-          rotation: 360,
-          transformOrigin: "center center",
-          onComplete: () => this.completePreloader()
-        }
+          { strokeDashoffset: 565.48 }, 
+          { 
+              strokeDashoffset: 0, 
+              duration: 2.5, 
+              ease: "power2.inOut",
+              onComplete: () => this.completePreloader()
+          }
       );
       
       // Aggiunge un'animazione di pulsazione al logo
       gsap.to(this.preloaderLogo, {
-        scale: 1.05,
-        duration: 1,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut"
+          scale: 1.05,
+          duration: 1,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
       });
-    },
-    
-    /**
-     * Completa l'animazione del preloader e mostra l'app
-     */
-    completePreloader: function() {
+  },
+  
+  /**
+   * Completa l'animazione del preloader e mostra l'app
+   */
+  completePreloader: function() {
       console.log('Completing preloader animation');
       
       // Interrompi l'animazione di pulsazione del logo
@@ -78,64 +76,58 @@ const PreloaderManager = {
       
       // Anima la dissolvenza di tutto il preloader
       gsap.to(this.preloader, {
-        autoAlpha: 0,
-        duration: 0.8,
-        onComplete: () => {
-          // Nascondi completamente il preloader
-          this.preloader.style.display = 'none';
-          
-          // Mostra l'interfaccia della chat con un'animazione di dissolvenza
-          gsap.to(this.chatContainer, {
-            opacity: 1,
-            duration: 0.6,
-            onComplete: () => {
-              // Inizializza l'app principale
-              if (typeof window.ChatCore.initialize === 'function') {
-                window.ChatCore.initialize();
-              } else {
-                console.warn('Function ChatCore.initialize not found, initializing app directly');
-                // Fallback: inizializza direttamente
-                const event = new Event('appReady');
-                document.dispatchEvent(event);
-              }
-            }
-          });
-        }
+          autoAlpha: 0,
+          duration: 0.8,
+          onComplete: () => {
+              // Nascondi completamente il preloader
+              this.preloader.style.display = 'none';
+              
+              // Mostra l'interfaccia della chat con un'animazione di dissolvenza
+              gsap.to(this.chatContainer, {
+                  opacity: 1,
+                  duration: 0.6,
+                  onComplete: () => {
+                      // Trigger appReady event
+                      const event = new Event('appReady');
+                      document.dispatchEvent(event);
+                  }
+              });
+          }
       });
-    },
-    
-    /**
-     * Configura un timeout di sicurezza per il preloader
-     */
-    setupTimeoutSafety: function() {
+  },
+  
+  /**
+   * Configura un timeout di sicurezza per il preloader
+   */
+  setupTimeoutSafety: function() {
       setTimeout(() => {
-        if (this.preloader && this.preloader.style.display !== 'none') {
-          console.warn('Preloader timeout: nascondo forzatamente');
-          this.hidePreloader();
-        }
+          if (this.preloader && this.preloader.style.display !== 'none') {
+              console.warn('Preloader timeout: nascondo forzatamente');
+              this.hidePreloader();
+          }
       }, 5000);
-    },
-    
-    /**
-     * Nasconde forzatamente il preloader
-     */
-    hidePreloader: function() {
+  },
+  
+  /**
+   * Nasconde forzatamente il preloader
+   */
+  hidePreloader: function() {
       if (this.preloader) {
-        this.preloader.style.display = 'none';
-        if (this.chatContainer) {
-          this.chatContainer.style.opacity = '1';
-        }
-        
-        const event = new Event('appReady');
-        document.dispatchEvent(event);
+          this.preloader.style.display = 'none';
+          if (this.chatContainer) {
+              this.chatContainer.style.opacity = '1';
+          }
+          
+          const event = new Event('appReady');
+          document.dispatchEvent(event);
       }
-    }
-  };
-  
-  // Esporta il modulo
-  window.PreloaderManager = PreloaderManager;
-  
-  // Inizializza il preloader quando il DOM è pronto
-  document.addEventListener('DOMContentLoaded', () => {
-    window.PreloaderManager.init();
-  });
+  }
+};
+
+// Esporta il modulo
+window.PreloaderManager = PreloaderManager;
+
+// Inizializza il preloader quando il DOM è pronto
+document.addEventListener('DOMContentLoaded', () => {
+  window.PreloaderManager.init();
+});
