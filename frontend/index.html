@@ -11,25 +11,24 @@
 </head>
 <body>
     <!-- Preloader -->
-<!-- Preloader -->
-<div id="js-preloader" class="preloader">
-    <div class="preloader__content">
-        <div class="preloader__circle">
-            <!-- Cerchio esterno statico (sfondo) -->
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="preloader__background-circle">
-                <circle cx="100" cy="100" r="90" stroke="rgba(159, 136, 124, 0.3)" stroke-width="2" fill="none" />
-            </svg>
-            <!-- Cerchio esterno animato (progresso) -->
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="preloader__progress-circle">
-                <circle id="loading-circle" cx="100" cy="100" r="90" stroke="#9f887c" stroke-width="2" fill="none" />
-            </svg>
-            <!-- Logo centrale -->
-            <div class="preloader__logo-container">
-                <img src="img/logo.png" alt="Villa Petriolo" class="preloader__logo" id="preloader-logo">
+    <div id="js-preloader" class="preloader">
+        <div class="preloader__content">
+            <div class="preloader__circle">
+                <!-- Cerchio esterno statico (sfondo) -->
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="preloader__background-circle">
+                    <circle cx="100" cy="100" r="90" stroke="rgba(159, 136, 124, 0.3)" stroke-width="2" fill="none" />
+                </svg>
+                <!-- Cerchio esterno animato (progresso) -->
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="preloader__progress-circle">
+                    <circle id="loading-circle" cx="100" cy="100" r="90" stroke="#9f887c" stroke-width="2" fill="none" />
+                </svg>
+                <!-- Logo centrale -->
+                <div class="preloader__logo-container">
+                    <img src="img/logo.png" alt="Villa Petriolo" class="preloader__logo" id="preloader-logo">
+                </div>
             </div>
         </div>
     </div>
-</div>
   
     <!-- Tenda di transizione -->
     <div id="js-page-transition-curtain" class="curtain">
@@ -151,12 +150,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/DrawSVGPlugin.min.js"></script>
     
-    <!-- Script dell'applicazione -->
-    <script src="js/message-formatter.js"></script>
-    <script src="js/context-utils.js"></script>
-    <script src="js/preloader.js"></script>
-    <script src="js/script.js"></script>
-    <script src="js/sidebar-fix.js"></script>
-    <script src="js/sidebar-toggle.js"></script>
+    <!-- Utilizza il nuovo file main.js che carica tutti gli altri moduli -->
+    <script src="js/main.js"></script>
 </body>
 </html>
