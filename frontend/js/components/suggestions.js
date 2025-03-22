@@ -41,24 +41,23 @@ const SuggestionsComponent = {
         const suggestionBtn = document.createElement('button');
         suggestionBtn.className = 'quick-suggestion';
         suggestionBtn.textContent = suggestion;
-        suggestionBtn.addEventListener('click', function() {
-          console.log('Suggestion clicked:', suggestion);
-          // Inserisci il suggerimento nell'input e invia
-          const messageInput = document.getElementById('message-input');
-          const chatForm = document.getElementById('chat-form');
-          if (messageInput && chatForm) {
-            messageInput.value = suggestion;
-            // Usa un timeout per garantire che l'input abbia il valore aggiornato
-            setTimeout(function() {
-              // Invia direttamente attraverso ChatCore invece di usare il form
-              if (window.ChatCore && typeof window.ChatCore.handleMessageSubmit === 'function') {
-                window.ChatCore.handleMessageSubmit(suggestion);
-              }
-            }, 10);
-          } else {
-            console.error('Message input or chat form not found');
+        suggestionBtn.setAttribute('type', 'button'); // Importante per evitare submit
+        
+        // Aggiungi listener direttamente
+        suggestionBtn.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Quick suggestion clicked:', suggestion);
+          
+          if (window.ChatCore && typeof window.ChatCore.handleMessageSubmit === 'function') {
+            window.ChatCore.handleMessageSubmit(suggestion);
           }
-        });
+        };
+        
+        // Assicurati che sia cliccabile
+        suggestionBtn.style.pointerEvents = 'auto';
+        suggestionBtn.style.cursor = 'pointer';
+        
         suggestionsContainer.appendChild(suggestionBtn);
       });
       
@@ -169,7 +168,7 @@ const SuggestionsComponent = {
       return;
     }
     
-    console.log('Setting up welcome suggestions');
+    console.log('Setting up welcome suggestions with direct event handlers');
     
     // Seleziona tutti i chip di suggerimento
     const suggestionChips = welcomeMessage.querySelectorAll('.suggestion-chip');
@@ -180,27 +179,24 @@ const SuggestionsComponent = {
       const newChip = chip.cloneNode(true);
       chip.parentNode.replaceChild(newChip, chip);
       
-      newChip.addEventListener('click', function() {
+      // Aggiungi event handler diretto e inline
+      newChip.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         const message = this.getAttribute('data-message');
-        console.log('Suggestion chip clicked:', message);
+        console.log('Welcome suggestion chip clicked:', message);
         
-        const messageInput = document.getElementById('message-input');
-        const chatForm = document.getElementById('chat-form');
-        
-        if (messageInput && chatForm && message) {
-          messageInput.value = message;
-          
-          // Usa un timeout per garantire che l'input venga aggiornato prima dell'invio
-          setTimeout(function() {
-            // Invia direttamente attraverso ChatCore invece di usare il form
-            if (window.ChatCore && typeof window.ChatCore.handleMessageSubmit === 'function') {
-              window.ChatCore.handleMessageSubmit(message);
-            }
-          }, 10);
+        if (message && window.ChatCore) {
+          window.ChatCore.handleMessageSubmit(message);
         } else {
-          console.error('Message input or chat form not found or no message attribute');
+          console.error('Either message is empty or ChatCore is not available');
         }
-      });
+      };
+      
+      // Assicurati che sia cliccabile
+      newChip.style.pointerEvents = 'auto';
+      newChip.style.cursor = 'pointer';
     });
     
     console.log('Welcome suggestions setup completed');
@@ -209,3 +205,21 @@ const SuggestionsComponent = {
 
 // Esporta il modulo
 window.SuggestionsComponent = SuggestionsComponent;
+
+// Aggiungi un controllo ritardato per rilevare il messaggio di benvenuto
+document.addEventListener('DOMContentLoaded', function() {
+  // Controlla periodicamente fino a quando il messaggio di benvenuto viene trovato
+  const checkWelcomeMessage = function() {
+    const welcomeMessage = document.querySelector('.welcome-message');
+    if (welcomeMessage) {
+      console.log('Welcome message found, setting up suggestions');
+      SuggestionsComponent.setupWelcomeSuggestions(welcomeMessage);
+    } else {
+      console.log('Welcome message not found yet, will check again');
+      setTimeout(checkWelcomeMessage, 1000);
+    }
+  };
+  
+  // Avvia il controllo
+  setTimeout(checkWelcomeMessage, 1000);
+});

@@ -10,7 +10,25 @@ const EventsManager = {
     
     this.setupChatForm();
     this.setupNewChatButton();
+    this.setupSidebarToggle();
     this.setupAppReadyListener();
+    
+    // Forzare l'esecuzione anche se già caricato
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      console.log('Document already ready, forcing setup');
+      this.setupAllEventListeners();
+    }
+  },
+  
+  /**
+   * Configura tutti gli event listeners dopo il caricamento completo
+   */
+  setupAllEventListeners: function() {
+    // Esegui tutte le configurazioni di eventi critici
+    this.setupChatForm();
+    this.setupNewChatButton();
+    this.setupSidebarToggle();
+    this.setupWelcomeSuggestions();
   },
   
   /**
@@ -23,36 +41,34 @@ const EventsManager = {
       return;
     }
     
+    console.log('Setting up chat form');
+    
     // Rimuovi tutti gli event listener esistenti
     const oldChatForm = chatForm;
     const newChatForm = oldChatForm.cloneNode(true);
     oldChatForm.parentNode.replaceChild(newChatForm, oldChatForm);
     
-    // Aggiungi l'event listener con capture = true per garantire che catturi l'evento prima di tutto
+    // Gestisce direttamente il submit tramite listener DOM
     newChatForm.addEventListener('submit', function(e) {
-      console.log('Form submit intercepted');
-      // Previene sia la propagazione che il comportamento predefinito
-      e.stopPropagation();
       e.preventDefault();
+      e.stopPropagation();
       
       const messageInput = document.getElementById('message-input');
-      if (!messageInput) return;
+      if (!messageInput) return false;
       
       const userMessage = messageInput.value.trim();
-      if (userMessage === '') return;
+      if (userMessage === '') return false;
       
-      console.log('Processing message:', userMessage);
+      console.log('Form submit captured, processing message:', userMessage);
       
-      // Invia il messaggio attraverso il ChatCore
-      if (typeof window.ChatCore === 'object' && typeof window.ChatCore.handleMessageSubmit === 'function') {
+      if (window.ChatCore && typeof window.ChatCore.handleMessageSubmit === 'function') {
         window.ChatCore.handleMessageSubmit(userMessage);
       } else {
         console.error('ChatCore not available or handleMessageSubmit method not found');
       }
       
-      // Ritorna false per sicurezza aggiuntiva per impedire il submit del form
       return false;
-    }, true); // Il true alla fine indica la fase di capturing
+    }, true);
     
     console.log('Chat form event listener set up with capturing');
   },
@@ -67,87 +83,122 @@ const EventsManager = {
       return;
     }
     
+    console.log('Setting up new chat button with direct DOM event');
+    
     // Rimuovi eventuali listener precedenti clonando l'elemento
     const newChatBtnClone = newChatBtn.cloneNode(true);
-    if (newChatBtn.parentNode) {
-      newChatBtn.parentNode.replaceChild(newChatBtnClone, newChatBtn);
-    }
+    newChatBtn.parentNode.replaceChild(newChatBtnClone, newChatBtn);
     
-    // Aggiungi il nuovo listener direttamente
+    // Aggiungi il nuovo listener con un handler inline
     newChatBtnClone.addEventListener('click', function(e) {
-      // Ferma la propagazione dell'evento per evitare che raggiunga l'overlay
+      e.preventDefault();
       e.stopPropagation();
       
-      console.log('New chat button clicked');
+      console.log('New chat button clicked with direct DOM event');
       
-      // Crea una nuova chat tramite ChatCore
-      if (typeof window.ChatCore === 'object' && typeof window.ChatCore.createNewChat === 'function') {
+      if (window.ChatCore && typeof window.ChatCore.createNewChat === 'function') {
         window.ChatCore.createNewChat();
       } else {
         console.error('ChatCore not available or createNewChat method not found');
       }
+    });
+    
+    // Assicurati che il pulsante sia visibile e cliccabile
+    newChatBtnClone.style.pointerEvents = 'auto';
+    newChatBtnClone.style.cursor = 'pointer';
+    
+    console.log('New chat button setup completed');
+  },
+  
+  /**
+   * Configura il pulsante toggle della sidebar
+   */
+  setupSidebarToggle: function() {
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    if (!sidebarToggleBtn) {
+      console.error('Sidebar toggle button not found');
+      return;
+    }
+    
+    console.log('Setting up sidebar toggle button with direct DOM event');
+    
+    // Rimuovi eventuali listener precedenti
+    const newToggleBtn = sidebarToggleBtn.cloneNode(true);
+    sidebarToggleBtn.parentNode.replaceChild(newToggleBtn, sidebarToggleBtn);
+    
+    // Aggiungi il listener con handler inline diretto
+    newToggleBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       
-      // Chiudi la sidebar dopo aver creato la chat (solo su mobile)
-      if (window.innerWidth <= 768) {
-        if (typeof window.SidebarComponent === 'object' && typeof window.SidebarComponent.closeSidebar === 'function') {
-          window.SidebarComponent.closeSidebar();
-        }
+      console.log('Sidebar toggle button clicked with direct DOM event');
+      
+      // Implementazione diretta del toggle
+      const isHidden = document.body.classList.toggle('sidebar-hidden');
+      
+      // Salva lo stato
+      if (window.StorageManager && typeof window.StorageManager.saveSidebarState === 'function') {
+        window.StorageManager.saveSidebarState(isHidden);
       }
     });
     
-    // Rimuoviamo l'attributo onclick dall'HTML che può causare conflitti
-    newChatBtnClone.removeAttribute('onclick');
+    // Assicurati che il pulsante sia visibile e cliccabile
+    newToggleBtn.style.pointerEvents = 'auto';
+    newToggleBtn.style.cursor = 'pointer';
     
-    console.log('New chat button event listener set up');
+    console.log('Sidebar toggle button setup completed');
+  },
+  
+  /**
+   * Configura i suggerimenti nel messaggio di benvenuto
+   */
+  setupWelcomeSuggestions: function() {
+    const welcomeMessage = document.querySelector('.welcome-message');
+    if (!welcomeMessage) {
+      console.log('Welcome message not found, will try again later');
+      return;
+    }
+    
+    console.log('Setting up welcome suggestions with direct DOM events');
+    
+    // Seleziona tutti i chip di suggerimento
+    const suggestionChips = welcomeMessage.querySelectorAll('.suggestion-chip');
+    console.log(`Found ${suggestionChips.length} suggestion chips`);
+    
+    suggestionChips.forEach(chip => {
+      // Rimuovi eventuali listener precedenti
+      const newChip = chip.cloneNode(true);
+      chip.parentNode.replaceChild(newChip, chip);
+      
+      // Aggiungi un listener diretto
+      newChip.addEventListener('click', function() {
+        const message = this.getAttribute('data-message');
+        console.log('Welcome suggestion clicked:', message);
+        
+        if (message && window.ChatCore) {
+          window.ChatCore.handleMessageSubmit(message);
+        }
+      });
+      
+      // Assicurati che sia cliccabile
+      newChip.style.pointerEvents = 'auto';
+      newChip.style.cursor = 'pointer';
+    });
+    
+    console.log('Welcome suggestions setup completed');
   },
   
   /**
    * Configura il listener per l'evento appReady 
-   * (scatenato quando il preloader è completato)
    */
   setupAppReadyListener: function() {
-    document.addEventListener('appReady', function() {
+    document.addEventListener('appReady', () => {
       console.log('App ready event received');
-      // Inizializza tutti i componenti necessari
-      if (typeof window.ChatCore === 'object' && typeof window.ChatCore.initialize === 'function') {
-        window.ChatCore.initialize();
-      } else {
-        console.error('ChatCore not available or initialize method not found');
-      }
       
-      // Inizializza il gestore dei temi
-      if (typeof window.ThemeManager === 'object' && typeof window.ThemeManager.init === 'function') {
-        window.ThemeManager.init();
-      } else {
-        console.error('ThemeManager not available or init method not found');
-      }
-      
-      // Inizializza il gestore responsive
-      if (typeof window.ResponsiveManager === 'object' && typeof window.ResponsiveManager.init === 'function') {
-        window.ResponsiveManager.init();
-      } else {
-        console.error('ResponsiveManager not available or init method not found');
-      }
-      
-      // Setup del sidebar toggle
-      if (typeof window.SidebarToggleManager === 'object' && typeof window.SidebarToggleManager.init === 'function') {
-        window.SidebarToggleManager.init();
-      }
-      
-      // Setup mobile UI
-      if (typeof window.SidebarComponent === 'object' && typeof window.SidebarComponent.setupMobileUI === 'function') {
-        window.SidebarComponent.setupMobileUI();
-      }
-      
-      // Reinizializza i suggerimenti welcome
-      setTimeout(function() {
-        const welcomeMessage = document.querySelector('.welcome-message');
-        if (welcomeMessage && window.SuggestionsComponent) {
-          window.SuggestionsComponent.setupWelcomeSuggestions(welcomeMessage);
-        }
-      }, 100);
-      
-      console.log('All components initialized after appReady');
+      // Delay per assicurarsi che il DOM sia completamente caricato
+      setTimeout(() => {
+        this.setupAllEventListeners();
+      }, 500);
     });
   }
 };
@@ -160,4 +211,13 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('DOMContentLoaded event fired in events.js');
   // Inizializza il gestore degli eventi
   window.EventsManager.init();
+});
+
+// Aggiungi anche un listener per il caricamento completo della pagina
+window.addEventListener('load', function() {
+  console.log('Window load event fired in events.js');
+  // Inizializza nuovamente per sicurezza
+  if (window.EventsManager) {
+    window.EventsManager.setupAllEventListeners();
+  }
 });

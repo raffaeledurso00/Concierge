@@ -39,7 +39,7 @@ const SidebarComponent = {
           <div class="chat-item-title">${chat.title || 'Nuova conversazione'}</div>
           <div class="chat-item-date">${new Date(chat.timestamp).toLocaleDateString()}</div>
         </div>
-        <button class="delete-chat-btn" data-id="${chatId}">
+        <button class="delete-chat-btn" data-id="${chatId}" type="button">
           <i class="fas fa-trash"></i>
         </button>
       `;
@@ -48,6 +48,16 @@ const SidebarComponent = {
     });
     
     // Add click events
+    this.setupChatItemListeners();
+    this.setupDeleteButtons();
+    
+    console.log('Chat list updated successfully');
+  },
+  
+  /**
+   * Configura i listener per gli elementi della chat
+   */
+  setupChatItemListeners: function() {
     const chatItemContents = document.querySelectorAll('.chat-item-content');
     chatItemContents.forEach(el => {
       el.addEventListener('click', (e) => {
@@ -55,13 +65,22 @@ const SidebarComponent = {
         console.log('Chat item clicked, ID:', chatId);
         if (typeof window.ChatCore.loadChat === 'function') {
           window.ChatCore.loadChat(chatId);
+          
+          // Chiudi la sidebar su mobile
+          if (window.innerWidth <= 768) {
+            document.body.classList.remove('sidebar-open');
+          }
         } else {
           console.error('ChatCore.loadChat function not available');
         }
       });
     });
-    
-    // Add delete events with custom modal
+  },
+  
+  /**
+   * Configura i pulsanti di eliminazione
+   */
+  setupDeleteButtons: function() {
     const deleteBtns = document.querySelectorAll('.delete-chat-btn');
     deleteBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -69,28 +88,51 @@ const SidebarComponent = {
         const chatId = btn.getAttribute('data-id');
         console.log('Delete button clicked for chat ID:', chatId);
         
-        // Usa il modale personalizzato
-        if (typeof window.ModalComponent.showModal === 'function') {
+        // Usa il modale personalizzato o chiedi conferma
+        if (typeof window.ModalComponent?.showModal === 'function') {
           window.ModalComponent.showModal('Sei sicuro di voler eliminare questa chat?', () => {
-            if (typeof window.ChatCore.deleteChat === 'function') {
-              window.ChatCore.deleteChat(chatId);
-            } else {
-              console.error('ChatCore.deleteChat function not available');
-            }
+            this.performDeleteChat(chatId);
           });
         } else {
-          console.error('ModalComponent.showModal function not available');
-          // Fallback: esegui comunque l'eliminazione
-          if (typeof window.ChatCore.deleteChat === 'function') {
-            if (confirm('Sei sicuro di voler eliminare questa chat?')) {
-              window.ChatCore.deleteChat(chatId);
-            }
+          // Fallback con confirm standard
+          if (confirm('Sei sicuro di voler eliminare questa chat?')) {
+            this.performDeleteChat(chatId);
           }
         }
       });
+      
+      // Assicurati che il pulsante sia cliccabile
+      btn.style.pointerEvents = 'auto';
+      btn.style.cursor = 'pointer';
     });
-    
-    console.log('Chat list updated successfully');
+  },
+  
+  /**
+   * Esegue l'eliminazione della chat
+   */
+  performDeleteChat: function(chatId) {
+    if (typeof window.ChatCore?.deleteChat === 'function') {
+      window.ChatCore.deleteChat(chatId);
+    } else {
+      console.error('ChatCore.deleteChat function not available');
+      
+      // Implementazione diretta come fallback
+      try {
+        const chats = window.StorageManager.getChats();
+        delete chats[chatId];
+        window.StorageManager.saveChats(chats);
+        
+        // Aggiorna la UI
+        this.updateChatList();
+        
+        // Se necessario, crea una nuova chat
+        if (Object.keys(chats).length === 0 && typeof window.ChatCore?.createNewChat === 'function') {
+          window.ChatCore.createNewChat();
+        }
+      } catch (error) {
+        console.error('Error in fallback delete chat:', error);
+      }
+    }
   },
   
   /**
@@ -121,7 +163,6 @@ const SidebarComponent = {
     
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
-    const chatSidebar = document.querySelector('.chat-sidebar');
     
     // Gestione del pulsante toggle
     if (sidebarToggle) {
@@ -133,6 +174,7 @@ const SidebarComponent = {
       
       newToggle.addEventListener('click', (e) => {
         e.stopPropagation();
+        e.preventDefault();
         console.log('Sidebar toggle clicked');
         // Toggle della sidebar
         if (document.body.classList.contains('sidebar-open')) {
@@ -147,32 +189,24 @@ const SidebarComponent = {
     
     // Utilizziamo SOLO l'overlay per la chiusura della sidebar
     if (sidebarOverlay) {
-      sidebarOverlay.addEventListener('click', () => {
+      // Rimuovi event listener esistenti
+      const newOverlay = sidebarOverlay.cloneNode(true);
+      if (sidebarOverlay.parentNode) {
+        sidebarOverlay.parentNode.replaceChild(newOverlay, sidebarOverlay);
+      }
+      
+      newOverlay.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
         console.log('Sidebar overlay clicked');
         this.closeSidebar();
       });
+      
+      // Assicurati che sia cliccabile
+      newOverlay.style.pointerEvents = 'auto';
     } else {
       console.error('Sidebar overlay not found');
     }
-    
-    // CORREZIONE: Impedisci che i clic sulla sidebar la chiudano
-    if (chatSidebar) {
-      chatSidebar.addEventListener('click', (e) => {
-        e.stopPropagation(); // Ferma la propagazione dell'evento
-      });
-    } else {
-      console.error('Chat sidebar not found');
-    }
-    
-    // Gestisci i ridimensionamenti della finestra
-    window.addEventListener('resize', () => {
-      // Se la finestra viene ridimensionata oltre 768px mentre il menu è aperto
-      if (window.innerWidth > 768 && document.body.classList.contains('sidebar-open')) {
-        // Rimuovi la classe sidebar-open
-        document.body.classList.remove('sidebar-open');
-        console.log('Sidebar closed on resize');
-      }
-    });
     
     console.log('Mobile UI setup completed');
   }
@@ -180,3 +214,19 @@ const SidebarComponent = {
 
 // Esporta il modulo
 window.SidebarComponent = SidebarComponent;
+
+// Inizializza quando il DOM è pronto
+document.addEventListener('DOMContentLoaded', function() {
+  // Assicurati che la sidebar mobile sia configurata
+  if (typeof window.SidebarComponent.setupMobileUI === 'function') {
+    window.SidebarComponent.setupMobileUI();
+  }
+});
+
+// Reinizializza anche al caricamento completo della pagina
+window.addEventListener('load', function() {
+  // Assicurati che la sidebar mobile sia configurata
+  if (typeof window.SidebarComponent.setupMobileUI === 'function') {
+    window.SidebarComponent.setupMobileUI();
+  }
+});
