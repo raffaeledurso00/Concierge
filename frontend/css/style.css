@@ -713,6 +713,137 @@ body {
     font-size: 1.2rem;
     color: #aaa;
 }
+/* STILI SIDEBAR RIDOTTA */
+/* Stili per la sidebar ridotta */
+.chat-sidebar {
+    width: 260px;
+    background-color: rgb(159, 136, 124);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    z-index: 10; /* Assicurati che sia sopra l'overlay */
+}
+
+/* Stato ridotto della sidebar (solo per desktop) */
+.sidebar-collapsed .chat-sidebar {
+    width: 60px;
+    overflow: hidden;
+}
+
+/* Nascondi gli elementi della sidebar quando è ridotta */
+.sidebar-collapsed .sidebar-header h2,
+.sidebar-collapsed .chat-item-content,
+.sidebar-collapsed .new-chat span,
+.sidebar-collapsed .user-info span,
+.sidebar-collapsed .delete-chat-btn {
+    display: none;
+}
+
+/* Stile per il pulsante di toggle della sidebar */
+.sidebar-toggle-btn {
+    position: absolute;
+    bottom: 15px;
+    right: -12px;
+    width: 24px;
+    height: 24px;
+    background-color: rgb(159, 136, 124);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 20;
+    transition: transform 0.3s ease;
+}
+
+/* Ruota l'icona quando la sidebar è ridotta */
+.sidebar-collapsed .sidebar-toggle-btn {
+    transform: rotate(180deg);
+}
+
+/* Modifica posizione del logo quando la sidebar è ridotta */
+.sidebar-collapsed .logo {
+    width: 40px;
+    margin: 0 auto;
+}
+
+/* Centrare il logo in modalità ridotta */
+.sidebar-collapsed .sidebar-header {
+    justify-content: center;
+    padding: 15px 0;
+}
+
+/* Stile per il pulsante nuova chat in modalità ridotta */
+.sidebar-collapsed #new-chat-btn {
+    padding: 10px 0;
+    justify-content: center;
+}
+
+/* Stile specifico per il pulsante nuova chat in modalità ridotta */
+.sidebar-collapsed #new-chat-btn i {
+    margin: 0;
+}
+
+/* Solo mostra l'avatar in modalità ridotta nella footer */
+.sidebar-collapsed .sidebar-footer {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+/* Nasconde il nome utente nella footer */
+.sidebar-collapsed .user-info {
+    justify-content: center;
+}
+
+/* Adatta le chat items in modalità ridotta */
+.sidebar-collapsed .chat-item {
+    justify-content: center;
+    padding: 10px 5px;
+}
+
+/* Responsività - non applicare il collasso su mobile */
+@media (max-width: 768px) {
+    .sidebar-toggle-btn {
+        display: none;
+    }
+    
+    .sidebar-collapsed .chat-sidebar {
+        width: 260px;
+    }
+    
+    .sidebar-collapsed .sidebar-header h2,
+    .sidebar-collapsed .chat-item-content,
+    .sidebar-collapsed .new-chat span,
+    .sidebar-collapsed .user-info span,
+    .sidebar-collapsed .delete-chat-btn {
+        display: block;
+    }
+    
+    .sidebar-collapsed .logo {
+        width: 120px;
+        margin-right: 10px;
+    }
+    
+    .sidebar-collapsed .sidebar-header {
+        justify-content: center;
+        padding: 20px;
+    }
+    
+    .sidebar-collapsed #new-chat-btn {
+        padding: 10px;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .sidebar-collapsed .user-info {
+        gap: 10px;
+    }
+}
 
 /* Container dei messaggi */
 .messages-container {
