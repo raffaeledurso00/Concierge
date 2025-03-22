@@ -276,20 +276,38 @@ class MessageFormatter {
             dish.name = dish.name.replace(priceMatch[0], '').trim();
         }
         
+        // CORREZIONE: Gestione migliorata delle parentesi
         // Estrai descrizione tra parentesi
-        const descMatch = dish.name.match(/\(([^)]+)\)/);
-        if (descMatch) {
-            dish.description = descMatch[1].trim();
-            dish.name = dish.name.replace(/\s*\([^)]+\)/, '').trim();
+        const descMatches = dish.name.match(/\(([^)]+)\)/g);
+        if (descMatches && descMatches.length > 0) {
+            // Prendi il contenuto di tutte le parentesi e uniscile
+            const descriptionParts = descMatches.map(match => {
+                return match.substring(1, match.length - 1).trim();
+            });
+            
+            dish.description = descriptionParts.join('. ');
+            
+            // Rimuovi tutte le parentesi dal nome
+            descMatches.forEach(match => {
+                dish.name = dish.name.replace(match, '').trim();
+            });
         }
         
-        // Cerca descrizioni dopo virgola
+        // Cerca descrizioni dopo virgola, solo se non abbiamo già una descrizione
         if (!dish.description && dish.name.includes(',')) {
             const parts = dish.name.split(',');
             
             // Il primo elemento è il nome, il resto è la descrizione
             dish.name = parts[0].trim();
             dish.description = parts.slice(1).join(',').trim();
+        }
+        
+        // CORREZIONE: Se non abbiamo trovato un prezzo, cerchiamo numeri seguiti da € o euro
+        if (!dish.price) {
+            const altPriceMatch = text.match(/(\d+(?:[.,]\d+)?)\s*(?:€|euro|EUR)/i);
+            if (altPriceMatch) {
+                dish.price = '€' + altPriceMatch[1];
+            }
         }
         
         // Pulizia finale
@@ -434,11 +452,11 @@ class MessageFormatter {
             price: ''
         };
         
-        // Estrai prezzo
-        const priceMatch = activity.name.match(/€\s*\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s*€|\d+(?:[.,]\d+)?\s*euro/i);
-        if (priceMatch) {
-            // Normalizza il prezzo
-            const priceText = priceMatch[0];
+        // CORREZIONE: Migliora l'estrazione del prezzo
+        const priceMatches = text.match(/(?:€\s*\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s*€|\d+(?:[.,]\d+)?\s*euro)/gi);
+        if (priceMatches && priceMatches.length > 0) {
+            // Prendi il primo prezzo trovato
+            const priceText = priceMatches[0];
             
             if (priceText.match(/\d+\s*euro/i)) {
                 activity.price = '€' + priceText.match(/\d+(?:[.,]\d+)?/)[0];
@@ -448,8 +466,18 @@ class MessageFormatter {
                 activity.price = priceText.replace(/\s+/g, '');
             }
             
-            // Rimuovi il prezzo dal nome
-            activity.name = activity.name.replace(priceMatch[0], '').trim();
+            // Rimuovi tutti i prezzi dal nome
+            priceMatches.forEach(match => {
+                activity.name = activity.name.replace(match, '').trim();
+            });
+        }
+        
+        // CORREZIONE: Cerca prezzi alternativi come ultimo tentativo
+        if (!activity.price) {
+            const altPriceMatch = text.match(/(\d+(?:[.,]\d+)?)\s*(?:€|euro|EUR)/i);
+            if (altPriceMatch) {
+                activity.price = '€' + altPriceMatch[1];
+            }
         }
         
         // Estrai durata
@@ -485,33 +513,24 @@ class MessageFormatter {
             }
         }
         
-        // Estrai descrizione tra parentesi
-        const descMatch = activity.name.match(/\(([^)]+)\)/);
-        if (descMatch) {
-            const content = descMatch[1].trim();
+        // CORREZIONE: Gestione migliorata delle parentesi per la descrizione
+        const descMatches = activity.name.match(/\(([^)]+)\)/g);
+        if (descMatches && descMatches.length > 0) {
+            // Prendi il contenuto di tutte le parentesi e uniscile
+            const descriptionParts = descMatches.map(match => {
+                return match.substring(1, match.length - 1).trim();
+            });
             
-            // Verifica se il contenuto è una durata
-            let isDuration = false;
-            for (const pattern of durationPatterns) {
-                if (pattern.test(content)) {
-                    if (!activity.duration) {
-                        activity.duration = content.match(pattern)[1].trim();
-                    }
-                    isDuration = true;
-                    break;
-                }
-            }
+            activity.description = descriptionParts.join('. ');
             
-            // Se non è una durata, o c'è altro oltre alla durata, è una descrizione
-            if (!isDuration) {
-                activity.description = content;
-            }
-            
-            activity.name = activity.name.replace(/\s*\([^)]+\)/, '').trim();
+            // Rimuovi tutte le parentesi dal nome
+            descMatches.forEach(match => {
+                activity.name = activity.name.replace(match, '').trim();
+            });
         }
         
         // Cerca descrizioni dopo virgola
-        if (activity.name.includes(',')) {
+        if (!activity.description && activity.name.includes(',')) {
             const parts = activity.name.split(',');
             
             // Il primo elemento è il nome, il resto potrebbe essere descrizione o durata
@@ -661,8 +680,6 @@ class MessageFormatter {
                     const capitaAfterMatch = textBetween.match(/(?:^|\s+|,\s*)([A-Z][a-zàèìòù]+)/);
                     if (capitaAfterMatch) {
                         eventEnd = datePosition + dateMatch[0].length + textBetween.indexOf(capitaAfterMatch[1]);
-                    } else {
-                        eventEnd = nextDatePos;
                     }
                 }
                 
@@ -702,11 +719,11 @@ class MessageFormatter {
             price: ''
         };
         
-        // Estrai prezzo
-        const priceMatch = event.name.match(/€\s*\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s*€|\d+(?:[.,]\d+)?\s*euro/i);
-        if (priceMatch) {
-            // Normalizza il prezzo
-            const priceText = priceMatch[0];
+        // CORREZIONE: Miglioramento dell'estrazione del prezzo
+        const priceMatches = text.match(/(?:€\s*\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?\s*€|\d+(?:[.,]\d+)?\s*euro)/gi);
+        if (priceMatches && priceMatches.length > 0) {
+            // Prendi il primo prezzo trovato
+            const priceText = priceMatches[0];
             
             if (priceText.match(/\d+\s*euro/i)) {
                 event.price = '€' + priceText.match(/\d+(?:[.,]\d+)?/)[0];
@@ -716,8 +733,26 @@ class MessageFormatter {
                 event.price = priceText.replace(/\s+/g, '');
             }
             
-            // Rimuovi il prezzo dal nome
-            event.name = event.name.replace(priceMatch[0], '').trim();
+            // Rimuovi il prezzo dal nome (tutti i prezzi trovati)
+            priceMatches.forEach(match => {
+                event.name = event.name.replace(match, '').trim();
+            });
+        }
+        
+        // CORREZIONE: Cerca prezzi alternativi se non ne abbiamo trovato uno
+        if (!event.price) {
+            // Cerca pattern come "costa 25 euro" o "prezzo di 30€"
+            const pricePhraseMatch = event.name.match(/(?:costa|prezzo|costo)[^\d]*(\d+(?:[.,]\d+)?)/i);
+            if (pricePhraseMatch) {
+                event.price = '€' + pricePhraseMatch[1];
+                
+                // Rimuovi la frase del prezzo dal nome
+                const pricePhrase = event.name.substring(
+                    event.name.indexOf(pricePhraseMatch[0]), 
+                    event.name.indexOf(pricePhraseMatch[0]) + pricePhraseMatch[0].length
+                );
+                event.name = event.name.replace(pricePhrase, '').trim();
+            }
         }
         
         // Estrai date con pattern specifici
@@ -828,6 +863,11 @@ class MessageFormatter {
             if (weekdaysMatch) {
                 event.date = weekdaysMatch[1].trim();
             }
+        }
+        
+        // CORREZIONE: Assicurati che il prezzo sia nel formato corretto
+        if (event.price && !event.price.startsWith('€')) {
+            event.price = '€' + event.price.replace(/[^\d,.]/g, '');
         }
         
         // Pulizia finale
