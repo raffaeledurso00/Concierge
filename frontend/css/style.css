@@ -11,7 +11,53 @@ body {
     height: 100vh;
     overflow: hidden;
 }
-/* Stili */
+/* Stili sidebar */
+/* Stile per l'overlay della sidebar mobile */
+/* Stile migliorato per l'overlay della sidebar mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-open .sidebar-overlay {
+    display: block;
+    opacity: 1;
+}
+
+/* Miglioramento della transizione e posizionamento della sidebar */
+.chat-sidebar {
+    width: 260px;
+    background-color: rgb(159, 136, 124);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    transition: left 0.3s ease;
+    z-index: 10; /* Assicurati che sia sopra l'overlay */
+}
+
+@media (max-width: 768px) {
+    .chat-sidebar {
+        position: fixed; /* Cambiato da absolute a fixed per migliore posizionamento */
+        left: -260px;
+        height: 100%;
+    }
+    
+    .sidebar-open .chat-sidebar {
+        left: 0;
+    }
+    
+    .mobile-menu {
+        display: block;
+    }
+}
 /* Stili del preloader da aggiungere a style.css */
 
 /* Preloader */

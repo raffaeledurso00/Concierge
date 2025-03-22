@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const welcomeMessage = document.getElementById('welcome-message');
     const currentTopicIndicator = document.getElementById('current-topic');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
     
     // State
     let currentChatId = null;
@@ -27,10 +28,59 @@ document.addEventListener('DOMContentLoaded', function() {
         chatForm: !!chatForm,
         messageInput: !!messageInput,
         newChatBtn: !!newChatBtn,
-        sidebarChats: !!sidebarChats
+        sidebarChats: !!sidebarChats,
+        sidebarOverlay: !!sidebarOverlay
     });
 
     // ===== UTILITY FUNCTIONS =====
+    
+    // Funzioni per la gestione della sidebar mobile
+    
+    // Funzione per aprire la sidebar (solo mobile)
+    function openSidebar() {
+        if (window.innerWidth <= 768) {
+            document.body.classList.add('sidebar-open');
+        }
+    }
+    
+    // Funzione per chiudere la sidebar (solo mobile)
+    function closeSidebar() {
+        if (window.innerWidth <= 768) {
+            document.body.classList.remove('sidebar-open');
+        }
+    }
+    
+    // Funzione semplificata per gestire i click dell'interfaccia mobile
+    function setupMobileUI() {
+        // Gestione del pulsante toggle
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Toggle della sidebar
+                if (document.body.classList.contains('sidebar-open')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            });
+        }
+        
+        // Utilizziamo SOLO l'overlay per la chiusura della sidebar
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', function() {
+                closeSidebar();
+            });
+        }
+        
+        // Gestisci i ridimensionamenti della finestra
+        window.addEventListener('resize', function() {
+            // Se la finestra viene ridimensionata oltre 768px mentre il menu è aperto
+            if (window.innerWidth > 768 && document.body.classList.contains('sidebar-open')) {
+                // Rimuovi la classe sidebar-open
+                document.body.classList.remove('sidebar-open');
+            }
+        });
+    }
     
     // Get all chats from local storage
     function getChats() {
@@ -91,6 +141,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update UI
         updateChatList();
         updateTopicIndicator(null);
+        
+        // Chiudi la sidebar dopo aver creato una nuova chat (su mobile)
+        closeSidebar();
     }
     
     // Load a chat
@@ -130,6 +183,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update UI
         updateChatList();
+        
+        // Chiudi la sidebar dopo la selezione (solo su mobile)
+        closeSidebar();
     }
     
     // Delete a chat
@@ -547,18 +603,14 @@ document.addEventListener('DOMContentLoaded', function() {
         createNewChat();
     });
     
-    // Sidebar toggle (mobile)
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', () => {
-            document.body.classList.toggle('sidebar-open');
-        });
-    }
-    
     // ===== INITIALIZATION =====
     
     // Funzione di inizializzazione dell'app che viene chiamata dopo il preloader
     window.initializeApp = function() {
         console.log('Initializing chat app');
+        
+        // Imposta l'interfaccia mobile
+        setupMobileUI();
         
         const chats = getChats();
         const chatIds = Object.keys(chats).sort((a, b) => {
