@@ -722,7 +722,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    background-color: #222222;
+    background-color: #0e0e0e;
 }
 
 .message-row {
