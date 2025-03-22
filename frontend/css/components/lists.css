@@ -1,63 +1,95 @@
-/* components/lists.css */
+/* components/lists.css - Versione ottimizzata per i casi specifici */
 .formatted-section {
-    margin: 15px 0;
-    border-left: 3px solid #9f887c;
-    padding-left: 10px;
+    margin: 18px 0;
+    border-left: 4px solid #9f887c;
+    padding: 12px 0 12px 15px;
     background-color: rgba(159, 136, 124, 0.05);
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 8px 8px 0;
 }
 
 .formatted-list {
     list-style: none;
     padding: 0;
-    margin: 8px 0;
+    margin: 10px 0;
 }
 
 .list-item {
-    padding: 10px;
-    margin-bottom: 8px;
+    padding: 14px;
+    margin-bottom: 14px;
     background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
+    border-radius: 8px;
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    transition: background-color 0.2s;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .list-item:hover {
     background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 8px;
 }
 
 .item-name {
-    flex: 1;
-    font-weight: 500;
+    font-weight: 600;
     color: #e0e0e0;
+    font-size: 1.1em;
+    flex: 1;
+    padding-right: 10px;
 }
 
 .item-details {
     font-size: 0.9em;
-    font-style: italic;
     color: #aaa;
     width: 100%;
-    margin-top: 4px;
+    margin-top: 8px;
+    line-height: 1.5;
 }
 
 .item-price {
     font-weight: bold;
-    color: #9f887c;
-    padding: 3px 10px;
-    border-radius: 10px;
-    background-color: rgba(159, 136, 124, 0.1);
-    margin-left: 10px;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background-color: rgba(159, 136, 124, 0.8);
+    min-width: 60px;
+    text-align: center;
+    font-size: 0.95em;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.item-date {
+    font-size: 0.85em;
+    font-style: italic;
+    color: #999;
+    width: 100%;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
 /* Stili specifici per i diversi tipi di liste */
 .menu-section .section-title {
     color: #e67e22;
-    font-size: 1.1em;
+    font-size: 1.2em;
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
     text-transform: uppercase;
+    border-bottom: 1px solid rgba(230, 126, 34, 0.3);
 }
 
 .menu-section {
@@ -65,16 +97,17 @@
 }
 
 .menu-item .item-price {
-    color: #e67e22;
-    background-color: rgba(230, 126, 34, 0.1);
+    background-color: rgba(230, 126, 34, 0.8);
 }
 
 .attivita-section .section-title {
     color: #2ecc71;
-    font-size: 1.1em;
+    font-size: 1.2em;
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
     text-transform: uppercase;
+    border-bottom: 1px solid rgba(46, 204, 113, 0.3);
 }
 
 .attivita-section {
@@ -82,16 +115,17 @@
 }
 
 .attivita-item .item-price {
-    color: #2ecc71;
-    background-color: rgba(46, 204, 113, 0.1);
+    background-color: rgba(46, 204, 113, 0.8);
 }
 
 .eventi-section .section-title {
     color: #3498db;
-    font-size: 1.1em;
+    font-size: 1.2em;
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
     text-transform: uppercase;
+    border-bottom: 1px solid rgba(52, 152, 219, 0.3);
 }
 
 .eventi-section {
@@ -99,6 +133,53 @@
 }
 
 .eventi-item .item-price {
-    color: #3498db;
-    background-color: rgba(52, 152, 219, 0.1);
+    background-color: rgba(52, 152, 219, 0.8);
+}
+
+/* Supporto per tema scuro e chiaro */
+[data-theme="dark"] .item-price {
+    background-color: rgba(66, 66, 66, 0.9);
+}
+
+[data-theme="light"] .item-price {
+    color: #fff;
+}
+
+/* Stile per il testo conclusivo */
+.conclusion-text {
+    margin-top: 16px;
+    line-height: 1.5;
+    color: #e0e0e0;
+    font-size: 1em;
+}
+
+/* Stile per i suggerimenti rapidi */
+.quick-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 15px;
+    width: 100%;
+}
+
+.quick-suggestion {
+    background-color: rgba(159, 136, 124, 0.2);
+    color: #e0e0e0;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid rgba(159, 136, 124, 0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.quick-suggestion:hover {
+    background-color: rgba(159, 136, 124, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
