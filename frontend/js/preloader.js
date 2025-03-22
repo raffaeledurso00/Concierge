@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const preloader = document.getElementById('js-preloader');
     const loadingCircle = document.getElementById('loading-circle');
     const preloaderLogo = document.getElementById('preloader-logo');
-    const chatHeaderLogo = document.querySelector('.chat-header-logo');
     const chatContainer = document.querySelector('.chat-container');
     
     // Verifica che tutti gli elementi necessari esistano
@@ -56,8 +55,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
 // Funzione per completare l'animazione del preloader
 function finishPreloader() {
-    // Correggiamo il riferimento al logo nell'header
-    const chatHeaderLogo = document.querySelector('.chat-header img'); // Modifichiamo questo selettore
+    // Correggiamo il riferimento al logo nell'header - CORRETTO
+    const chatHeaderLogo = document.querySelector('.chat-header-logo');
     
     // Ottieni la posizione e le dimensioni
     const headerBounds = chatHeaderLogo ? chatHeaderLogo.getBoundingClientRect() : null;
@@ -97,7 +96,7 @@ function finishPreloader() {
         // Se troviamo il logo nell'header, animiamo verso di esso
         const scaleX = headerBounds.width / preloaderLogoBounds.width;
         const scaleY = headerBounds.height / preloaderLogoBounds.height;
-        const scale = Math.min(scaleX, scaleY);
+        const scale = Math.min(scaleX, scaleY, 0.7); // Limitiamo la scala massima a 0.7
         
         const offsetX = headerBounds.left + (headerBounds.width / 2) - (preloaderLogoBounds.left + preloaderLogoBounds.width / 2);
         const offsetY = headerBounds.top + (headerBounds.height / 2) - (preloaderLogoBounds.top + preloaderLogoBounds.height / 2);
@@ -184,4 +183,17 @@ function finishPreloader() {
             hidePreloader();
         }
     }, 5000);
+    
+    // Funzione per nascondere forzatamente il preloader
+    function hidePreloader() {
+        if (preloader) {
+            preloader.style.display = 'none';
+            if (chatContainer) {
+                chatContainer.style.opacity = '1';
+            }
+            
+            const event = new Event('appReady');
+            document.dispatchEvent(event);
+        }
+    }
 });
