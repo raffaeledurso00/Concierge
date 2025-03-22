@@ -1,18 +1,20 @@
 /* components/lists.css */
 .formatted-section {
-    margin: 12px 0;
+    margin: 15px 0;
     border-left: 3px solid #9f887c;
     padding-left: 10px;
+    background-color: rgba(159, 136, 124, 0.05);
+    border-radius: 0 4px 4px 0;
 }
 
 .formatted-list {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin: 8px 0;
 }
 
 .list-item {
-    padding: 8px;
+    padding: 10px;
     margin-bottom: 8px;
     background-color: rgba(255, 255, 255, 0.05);
     border-radius: 4px;
@@ -29,6 +31,7 @@
 .item-name {
     flex: 1;
     font-weight: 500;
+    color: #e0e0e0;
 }
 
 .item-details {
@@ -42,14 +45,19 @@
 .item-price {
     font-weight: bold;
     color: #9f887c;
-    padding: 2px 8px;
+    padding: 3px 10px;
     border-radius: 10px;
     background-color: rgba(159, 136, 124, 0.1);
+    margin-left: 10px;
 }
 
 /* Stili specifici per i diversi tipi di liste */
 .menu-section .section-title {
     color: #e67e22;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-transform: uppercase;
 }
 
 .menu-section {
@@ -63,6 +71,10 @@
 
 .attivita-section .section-title {
     color: #2ecc71;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-transform: uppercase;
 }
 
 .attivita-section {
@@ -76,6 +88,10 @@
 
 .eventi-section .section-title {
     color: #3498db;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-transform: uppercase;
 }
 
 .eventi-section {

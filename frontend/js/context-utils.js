@@ -11,6 +11,10 @@ class ConversationContext {
             'altro?', 'e poi?', 'cosa altro?', 'continua', 'ad esempio?', 'come?', 
             'e?', 'tipo?', 'ad esempio', 'per esempio', 'quali?', 'e dopo?'
         ];
+        
+        // Aggiungiamo un meccanismo per ricordare gli interessi dell'utente
+        this.userInterests = new Set();
+        this.userPreferences = {};
     }
 
     /**
@@ -28,13 +32,45 @@ class ConversationContext {
         // Se non è una domanda breve, aggiorna il topic
         if (!isShortQuestion) {
             this.updateTopic(lowerMessage);
+            
+            // Estrai interessi e preferenze
+            this.extractUserPreferences(lowerMessage);
         }
         
         return {
             topic: this.currentTopic,
             isFollowUp: isShortQuestion,
-            needsMoreContext: isShortQuestion && !this.currentTopic
+            needsMoreContext: isShortQuestion && !this.currentTopic,
+            userInterests: Array.from(this.userInterests),
+            userPreferences: this.userPreferences
         };
+    }
+    
+    /**
+     * Estrae e memorizza le preferenze dell'utente
+     * @param {string} message - Il messaggio dell'utente
+     */
+    extractUserPreferences(message) {
+        // Estrai interessi dalle preferenze espresse
+        if (message.match(/mi piace|adoro|interessato a|preferisco/i)) {
+            // Cerca sostantivi dopo espressioni di preferenza
+            const matches = message.match(/(?:mi piace|adoro|interessato a|preferisco)\s+(?:il|la|le|lo|i|gli|l')?([a-zàèìòù\s]+)/i);
+            if (matches && matches[1]) {
+                const interest = matches[1].trim().toLowerCase();
+                this.userInterests.add(interest);
+            }
+        }
+        
+        // Estrai preferenze alimentari
+        if (message.match(/vegetarian|vegan|allergic|intolerant|celiac|vegano|vegetariano|allergia|intolleranza|celiaco/i)) {
+            this.userPreferences.dietary = message;
+        }
+        
+        // Estrai il numero di persone
+        const personMatch = message.match(/per (\d+) person[e|a]/i);
+        if (personMatch) {
+            this.userPreferences.groupSize = personMatch[1];
+        }
     }
     
     /**
@@ -103,6 +139,15 @@ class ConversationContext {
                     break;
             }
             
+            // Aggiungi eventuali preferenze note dell'utente
+            if (this.userPreferences.dietary) {
+                enhancedMessage += ` (Nota: l'ospite ha menzionato preferenze alimentari: ${this.userPreferences.dietary})`;
+            }
+            
+            if (this.userPreferences.groupSize) {
+                enhancedMessage += ` (Nota: l'ospite ha menzionato un gruppo di ${this.userPreferences.groupSize} persone)`;
+            }
+            
             return enhancedMessage;
         }
         
@@ -114,6 +159,8 @@ class ConversationContext {
      */
     reset() {
         this.currentTopic = null;
+        this.userInterests = new Set();
+        this.userPreferences = {};
     }
 }
 

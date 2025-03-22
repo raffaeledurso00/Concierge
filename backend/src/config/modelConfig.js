@@ -1,18 +1,17 @@
 const MODEL_CONFIG = {
-    name: 'llama3.1:8b',  // Manteniamo lo stesso modello
+    name: 'llama3.1:8b',
     baseUrl: 'http://localhost:11434',
     apiPath: '/api/generate',
     parameters: {
         num_thread: 4,
-        num_ctx: 2048,      // Aumentato per gestire un contesto più ampio
-        temperature: 0.4,   // Leggermente aumentato per più variabilità nelle risposte
-        top_p: 0.85,        // Aumentato per consentire più creatività
-        max_tokens: 1000,   // Aumentato per risposte più dettagliate
+        num_ctx: 4096,        // Aumentato per gestire conversazioni più lunghe
+        temperature: 0.7,     // Più alto per maggiore creatività
+        top_p: 0.9,           // Leggermente aumentato
+        max_tokens: 1500,     // Più token per risposte più complete
         top_k: 40,
-        repeat_penalty: 1.2, // Aumentato per evitare ripetizioni
-        presence_penalty: 0.3, // Aggiunto per penalizzare ripetizioni tematiche
-        frequency_penalty: 0.5 // Aggiunto per incoraggiare un vocabolario più vario
+        repeat_penalty: 1.2,
+        presence_penalty: 0.4,
+        frequency_penalty: 0.5,
+        stop: ["Utente:", "Ospite:"] // Aggiunto per evitare che il modello continui la conversazione
     }
 };
-
-module.exports = MODEL_CONFIG;

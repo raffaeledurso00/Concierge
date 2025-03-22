@@ -384,62 +384,139 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Funzione per aggiungere suggerimenti rapidi a un messaggio del bot
-    function addQuickSuggestionsToMessage(messageRow, text) {
-        // Estrai potenziali suggerimenti dal testo della domanda
-        let suggestions = [];
-        
-        // Se la domanda contiene "quale" o "preferisce", cerca opzioni nel testo
-        if (text.match(/quale|preferisce|interessa|desidera/i)) {
-            // Cerca parole chiave con la prima lettera maiuscola (potrebbero essere opzioni)
-            const options = text.match(/([A-Z][a-z]+(?:\s+[a-z]+){0,3})/g);
-            
-            if (options && options.length > 0) {
-                // Filtra opzioni che sembrano essere nomi di piatti o attività
-                suggestions = [...new Set(options)].filter(option => 
-                    option.length > 3 && 
-                    !['Villa', 'Petriolo', 'ANTIPASTI', 'PRIMI', 'SECONDI', 'DOLCI', 'INTERNE', 'ESTERNE', 'ESCURSIONI'].includes(option)
-                );
-            }
+// Funzione per aggiungere suggerimenti rapidi a un messaggio del bot
+function addQuickSuggestionsToMessage(messageRow, text) {
+    // Analizza l'argomento del messaggio per contestualizzare i suggerimenti
+    let messageContext = 'generale';
+    
+    if (text.match(/ristorante|menu|piatti|mangiare|cena|pranzo/i)) {
+        messageContext = 'ristorante';
+    } else if (text.match(/attività|tour|escursion|visita/i)) {
+        messageContext = 'attivita';
+    } else if (text.match(/eventi|programma|spettacolo/i)) {
+        messageContext = 'eventi';
+    } else if (text.match(/servizi|camera|reception/i)) {
+        messageContext = 'servizi';
+    }
+    
+    // Definisci suggerimenti in base al contesto
+    let suggestions = [];
+    
+    // Verifica se il messaggio contiene una domanda
+    const containsQuestion = text.includes('?');
+    
+    if (containsQuestion) {
+        switch (messageContext) {
+            case 'ristorante':
+                suggestions = [
+                    'Vorrei prenotare un tavolo',
+                    'Avete opzioni vegetariane?',
+                    'A che ora apre?',
+                    'Prezzo medio?'
+                ];
+                break;
+            case 'attivita':
+                suggestions = [
+                    'Quanto dura?',
+                    'Quanto costa?',
+                    'È adatto ai bambini?',
+                    'Come si prenota?'
+                ];
+                break;
+            case 'eventi':
+                suggestions = [
+                    'Quando si svolge?',
+                    'Devo prenotare?',
+                    'Prezzo del biglietto?',
+                    'Altri eventi simili?'
+                ];
+                break;
+            case 'servizi':
+                suggestions = [
+                    'Orari di check-in?',
+                    'Avete il WiFi?',
+                    'C\'è un parcheggio?',
+                    'Servizio in camera?'
+                ];
+                break;
+            default:
+                suggestions = [
+                    'Ditemi di più',
+                    'Costi?',
+                    'Orari?',
+                    'Come posso prenotare?'
+                ];
         }
-        
-        // Se non abbiamo suggerimenti dal testo, usa alcuni predefiniti basati sul contesto
-        if (suggestions.length === 0) {
-            // Determina il contesto in base alle parole chiave nel testo
-            if (text.match(/menu|ristorante|pranzo|cena|piatti|mangiare/i)) {
-                suggestions = ['Sì, grazie', 'Quali sono i piatti tipici?', 'Orari di apertura?', 'Posso prenotare?'];
-            } else if (text.match(/attività|escursion|tour|visita|passeggiata/i)) {
-                suggestions = ['Mi interessa', 'Costi?', 'Durata?', 'Altre opzioni?'];
-            } else if (text.match(/evento|spettacolo|concerto|degustazione/i)) {
-                suggestions = ['Voglio partecipare', 'Quando?', 'Prezzo?', 'È necessario prenotare?'];
-            } else {
-                suggestions = ['Sì', 'No', 'Più informazioni', 'Altro?'];
-            }
-        }
-        
-        // Limita a 4 suggerimenti
-        suggestions = suggestions.slice(0, 4);
-        
-        // Aggiungi i suggerimenti solo se ne abbiamo
-        if (suggestions.length > 0) {
-            const suggestionsContainer = document.createElement('div');
-            suggestionsContainer.className = 'quick-suggestions';
-            
-            suggestions.forEach(suggestion => {
-                const suggestionBtn = document.createElement('button');
-                suggestionBtn.className = 'quick-suggestion';
-                suggestionBtn.textContent = suggestion;
-                suggestionBtn.addEventListener('click', () => {
-                    // Inserisci il suggerimento nell'input e invia
-                    messageInput.value = suggestion;
-                    chatForm.dispatchEvent(new Event('submit'));
-                });
-                suggestionsContainer.appendChild(suggestionBtn);
-            });
-            
-            // Aggiungi i suggerimenti al messaggio
-            messageRow.querySelector('.message-content').appendChild(suggestionsContainer);
+    } else {
+        // Se non è una domanda, offri opzioni generali basate sul contesto
+        switch (messageContext) {
+            case 'ristorante':
+                suggestions = [
+                    'Vorrei prenotare',
+                    'Menu completo?',
+                    'Specialità della casa?',
+                    'Opzioni per allergici?'
+                ];
+                break;
+            case 'attivita':
+                suggestions = [
+                    'Più informazioni',
+                    'Altre attività?',
+                    'Prenotazione',
+                    'Tour privati?'
+                ];
+                break;
+            case 'eventi':
+                suggestions = [
+                    'Eventi di domani?',
+                    'Eventi per bambini?',
+                    'Concerti?',
+                    'Eventi gratuiti?'
+                ];
+                break;
+            case 'servizi':
+                suggestions = [
+                    'Servizi inclusi?',
+                    'Trasporto?',
+                    'Servizi extra?',
+                    'Assistenza 24h?'
+                ];
+                break;
+            default:
+                suggestions = [
+                    'Menu ristorante',
+                    'Attività disponibili',
+                    'Servizi offerti',
+                    'Eventi in programma'
+                ];
         }
     }
+    
+    // Aggiungi i suggerimenti solo se ne abbiamo
+    if (suggestions.length > 0) {
+        const suggestionsContainer = document.createElement('div');
+        suggestionsContainer.className = 'quick-suggestions';
+        
+        suggestions.forEach(suggestion => {
+            const suggestionBtn = document.createElement('button');
+            suggestionBtn.className = 'quick-suggestion';
+            suggestionBtn.textContent = suggestion;
+            suggestionBtn.addEventListener('click', () => {
+                // Inserisci il suggerimento nell'input e invia
+                const messageInput = document.getElementById('message-input');
+                const chatForm = document.getElementById('chat-form');
+                if (messageInput && chatForm) {
+                    messageInput.value = suggestion;
+                    chatForm.dispatchEvent(new Event('submit'));
+                }
+            });
+            suggestionsContainer.appendChild(suggestionBtn);
+        });
+        
+        // Aggiungi i suggerimenti al messaggio
+        messageRow.querySelector('.message-content').appendChild(suggestionsContainer);
+    }
+}
     
     // Show typing indicator
     function showTypingIndicator() {
@@ -502,53 +579,63 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Send message to backend
-    async function sendMessageToBackend(text) {
-        try {
-            // Migliora il messaggio con il contesto se necessario
-            let enhancedMessage = text;
-            if (window.conversationContext) {
-                const chats = getChats();
-                const conversation = chats[currentChatId]?.messages || [];
-                enhancedMessage = window.conversationContext.enhanceMessage(text, conversation);
-            }
-            
-            // Aggiungi la stanza alla richiesta
-            const roomId = currentChatId || 'default_room';
-            
-            const response = await fetch(BACKEND_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    message: enhancedMessage,
-                    roomId: roomId
-                }),
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            return data.response;
-        } catch (error) {
-            console.error('Error sending message:', error);
-            
-            // Risposte personalizzate in base al testo della domanda per un'esperienza più fluida anche offline
-            if (text.toLowerCase().includes('menu') || text.toLowerCase().includes('mangiare') || 
-                text.toLowerCase().includes('ristorante') || text.toLowerCase().includes('cena')) {
-                return "Il nostro ristorante è aperto ogni giorno dalle 12:30 alle 14:30 e dalle 19:30 alle 22:00. Offriamo cucina toscana tradizionale con ingredienti freschi e locali. La specialità della casa è la bistecca alla fiorentina. Desidera prenotare un tavolo o conoscere il menu completo?";
-            } else if (text.toLowerCase().includes('attività') || text.toLowerCase().includes('fare') || 
-                      text.toLowerCase().includes('escursion')) {
-                return "Villa Petriolo offre diverse attività come degustazioni di vino, corsi di cucina, passeggiate guidate tra gli ulivi, tour in bicicletta e visita alla nostra fattoria biologica. Per domani è previsto anche un tour speciale nei vigneti. Quale di queste attività le interessa di più?";
-            } else if (text.toLowerCase().includes('altro')) {
-                return "Certamente! Abbiamo anche una spa con sauna e bagno turco, una piscina all'aperto con vista panoramica sulle colline toscane, e organizziamo eventi settimanali come degustazioni di olio d'oliva e serate musicali. C'è qualcosa di particolare che le interessa?";
-            }
-            
-            return "Mi scusi, sto riscontrando problemi di connessione. Come posso aiutarla con il suo soggiorno a Villa Petriolo? Posso fornirle informazioni sul ristorante, sulle attività disponibili o sui servizi della struttura.";
+// Nuova funzione per inviare il messaggio al backend
+async function sendMessageToBackend(text) {
+    try {
+        // Migliora il messaggio con il contesto se necessario
+        let enhancedMessage = text;
+        if (window.conversationContext) {
+            const chats = getChats();
+            const conversation = chats[currentChatId]?.messages || [];
+            enhancedMessage = window.conversationContext.enhanceMessage(text, conversation);
         }
+        
+        // Aggiungi la stanza alla richiesta
+        const roomId = currentChatId || 'default_room';
+        
+        // Aggiungi eventuali preferenze salvate dell'utente
+        const userContext = window.conversationContext ? {
+            userInterests: Array.from(window.conversationContext.userInterests),
+            userPreferences: window.conversationContext.userPreferences
+        } : {};
+        
+        const response = await fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: enhancedMessage,
+                roomId: roomId,
+                context: userContext
+            }),
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.response;
+    } catch (error) {
+        console.error('Error sending message:', error);
+        
+        // Risposte personalizzate in base al testo della domanda per un'esperienza più fluida anche offline
+        if (text.toLowerCase().includes('menu') || text.toLowerCase().includes('mangiare') || 
+            text.toLowerCase().includes('ristorante') || text.toLowerCase().includes('cena')) {
+            return "Il nostro ristorante è aperto ogni giorno dalle 12:30 alle 14:30 e dalle 19:30 alle 22:00. Offriamo cucina toscana tradizionale con ingredienti freschi e locali. La specialità della casa è la bistecca alla fiorentina. Desidera prenotare un tavolo o conoscere il menu completo?";
+        } else if (text.toLowerCase().includes('attività') || text.toLowerCase().includes('fare') || 
+                  text.toLowerCase().includes('escursion')) {
+            return "Villa Petriolo offre diverse attività come degustazioni di vino, corsi di cucina, passeggiate guidate tra gli ulivi, tour in bicicletta e visita alla nostra fattoria biologica. Per domani è previsto anche un tour speciale nei vigneti. Quale di queste attività le interessa di più?";
+        } else if (text.toLowerCase().includes('altro')) {
+            return "Certamente! Abbiamo anche una spa con sauna e bagno turco, una piscina all'aperto con vista panoramica sulle colline toscane, e organizziamo eventi settimanali come degustazioni di olio d'oliva e serate musicali. C'è qualcosa di particolare che le interessa?";
+        }
+        
+        return "Mi scusi, sto riscontrando problemi di connessione. Come posso aiutarla con il suo soggiorno a Villa Petriolo? Posso fornirle informazioni sul ristorante, sulle attività disponibili o sui servizi della struttura.";
     }
+}
+
+// (il resto del file rimane invariato)
 
     // ===== EVENT LISTENERS =====
     

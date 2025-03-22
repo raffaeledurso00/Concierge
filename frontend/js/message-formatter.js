@@ -1,4 +1,4 @@
-// Nuovo file: frontend/js/message-formatter.js
+// frontend/js/message-formatter.js
 
 /**
  * Utility per formattare i messaggi con liste e formattazione avanzata
@@ -37,9 +37,6 @@ class MessageFormatter {
                 ]
             }
         ];
-        
-        // Pattern per riconoscere elementi di una lista
-        this.itemPattern = /([^,]+?)(?:\(([^)]+)\))?,?/g;
     }
     
     /**
@@ -108,61 +105,87 @@ class MessageFormatter {
      * @returns {string} - HTML della lista formattata
      */
     createFormattedList(content, type) {
-        // Dividi il contenuto in elementi della lista
-        // Gli elementi possono essere separati da virgole o da punti
-        const items = [];
+        // Array per contenere gli elementi della lista puliti
+        const cleanItems = [];
         
-        // Dividi prima in frasi (separate da punto)
-        const sentences = content.split(/\.(?=\s|$)/);
+        // Dividi in frasi (separate da punto o punto e virgola)
+        const sentences = content.split(/[\.;](?=\s|$)/);
         
         sentences.forEach(sentence => {
-            if (!sentence.trim()) return;
+            const trimmedSentence = sentence.trim();
+            if (trimmedSentence.length === 0) return;
             
-            // Cerca elementi all'interno della frase
-            let match;
-            
-            // Se la frase non contiene virgole, considerala come un singolo elemento
-            if (!sentence.includes(',')) {
-                items.push(sentence.trim());
-            } else {
-                // Altrimenti dividi per virgole
-                sentence.split(',').forEach(part => {
-                    if (part.trim()) {
-                        items.push(part.trim());
+            // Gestisci diversamente le frasi con o senza virgole
+            if (trimmedSentence.includes(',')) {
+                // Dividi per virgole e processa ogni parte
+                const parts = trimmedSentence.split(',');
+                parts.forEach(part => {
+                    const trimmedPart = part.trim();
+                    if (trimmedPart.length > 0) {
+                        cleanItems.push(this.cleanItemText(trimmedPart));
                     }
                 });
+            } else {
+                // Aggiungi la frase intera come elemento
+                cleanItems.push(this.cleanItemText(trimmedSentence));
             }
         });
         
         // Rimuovi duplicati e filtra elementi vuoti
-        const uniqueItems = [...new Set(items)].filter(item => item && item.length > 1);
+        const uniqueItems = [...new Set(cleanItems)].filter(item => item && item.title.length > 1);
         
         // Costruisci la lista HTML
         const listItems = uniqueItems.map(item => {
-            // Estrai prezzo se presente
-            const priceMatch = item.match(/(€\d+(?:[.,]\d+)?)/);
-            const price = priceMatch ? priceMatch[1] : '';
-            
-            // Rimuovi il prezzo dal testo dell'elemento
-            let itemText = item.replace(/(€\d+(?:[.,]\d+)?)/, '').trim();
-            
-            // Estrai dettagli tra parentesi se presenti
-            const detailsMatch = itemText.match(/\(([^)]+)\)/);
-            const details = detailsMatch ? detailsMatch[1] : '';
-            
-            // Rimuovi i dettagli tra parentesi dal testo dell'elemento
-            itemText = itemText.replace(/\s*\([^)]+\)/, '').trim();
-            
             return `
                 <li class="list-item ${type}-item">
-                    <div class="item-name">${itemText}</div>
-                    ${details ? `<div class="item-details">${details}</div>` : ''}
-                    ${price ? `<div class="item-price">${price}</div>` : ''}
+                    <div class="item-name">${item.title}</div>
+                    ${item.details ? `<div class="item-details">${item.details}</div>` : ''}
+                    ${item.price ? `<div class="item-price">${item.price}</div>` : ''}
                 </li>
             `;
         });
         
         return `<ul class="formatted-list ${type}-list">${listItems.join('')}</ul>`;
+    }
+    
+    /**
+     * Pulisce il testo dell'elemento, rimuovendo caratteri indesiderati e separando dettagli e prezzo
+     * @param {string} text - Testo dell'elemento da pulire
+     * @returns {Object} - Oggetto contenente titolo, dettagli e prezzo
+     */
+    cleanItemText(text) {
+        // Oggetto risultante
+        const result = {
+            title: '',
+            details: '',
+            price: ''
+        };
+        
+        // Rimuovi i simboli () vuoti
+        const cleanedText = text.replace(/\(\s*\)/g, '').trim();
+        
+        // Estrai prezzo se presente (formato €XX o €XX.XX)
+        const priceMatch = cleanedText.match(/(€\s*\d+(?:[.,]\d+)?)/);
+        if (priceMatch) {
+            result.price = priceMatch[1].replace(/\s+/g, ''); // Rimuovi spazi nel prezzo
+            
+            // Rimuovi il prezzo dal testo dell'elemento
+            const textWithoutPrice = cleanedText.replace(priceMatch[0], '').trim();
+            result.title = textWithoutPrice;
+        } else {
+            result.title = cleanedText;
+        }
+        
+        // Estrai dettagli tra parentesi se presenti
+        const detailsMatch = result.title.match(/\(([^)]+)\)/);
+        if (detailsMatch) {
+            result.details = detailsMatch[1].trim();
+            
+            // Rimuovi i dettagli tra parentesi dal titolo
+            result.title = result.title.replace(/\s*\([^)]+\)/, '').trim();
+        }
+        
+        return result;
     }
 }
 

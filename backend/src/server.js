@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const chatRoutes = require('./routes/chatRoutes');
+const aiService = require('./services/aiService');
 
 // Carica variabili d'ambiente
 dotenv.config();
@@ -23,6 +24,11 @@ app.use('/api/chat', chatRoutes);
 app.get('/', (req, res) => {
   res.json({ message: 'Villa Petriolo Concierge API attiva' });
 });
+
+// Pulizia periodica dei vecchi contesti
+setInterval(() => {
+  aiService.cleanupOldContexts();
+}, 3600000); // Ogni ora
 
 // Avvio del server
 app.listen(PORT, () => {

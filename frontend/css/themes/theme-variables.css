@@ -1,0 +1,155 @@
+/* themes/theme-variables.css */
+:root {
+    /* Colori di base del tema predefinito (marrone chiaro) */
+    --primary-color: rgb(159, 136, 124);
+    --primary-color-dark: rgb(139, 116, 104);
+    --primary-color-light: rgba(159, 136, 124, 0.2);
+    --primary-color-very-light: rgba(159, 136, 124, 0.1);
+  
+    /* Colori di sfondo */
+    --bg-main: #121212;
+    --bg-sidebar: var(--primary-color);
+    --bg-header: #1a1a1a;
+    --bg-input: #2a2a2a;
+    --bg-message-bot: #2a2a2a;
+    --bg-message-user: var(--primary-color);
+  
+    /* Colori di testo */
+    --text-light: #ffffff;
+    --text-dark: #121212;
+    --text-muted: #aaaaaa;
+    --text-content: #e0e0e0;
+  
+    /* Colori di stato e feedback */
+    --color-success: #2ecc71;
+    --color-warning: #e67e22;
+    --color-danger: #e74c3c;
+    --color-info: #3498db;
+  
+    /* Bordi e separatori */
+    --border-color: #333;
+    --border-light: rgba(255, 255, 255, 0.2);
+  
+    /* Altri elementi */
+    --typing-dots-color: var(--primary-color);
+    
+    /* Logo filter - per default nessun filtro */
+    --logo-filter: none;
+    
+    /* Transizioni */
+    --theme-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, filter 0.3s ease;
+  }
+  
+  /* Tema Verde */
+  [data-theme="green"] {
+    --primary-color: rgb(76, 175, 80);
+    --primary-color-dark: rgb(56, 142, 60);
+    --primary-color-light: rgba(76, 175, 80, 0.2);
+    --primary-color-very-light: rgba(76, 175, 80, 0.1);
+    
+    /* Applicare filtro per rendere il logo verde */
+    --logo-filter: hue-rotate(90deg) saturate(1.2);
+  }
+  
+  /* Tema Blu */
+  [data-theme="blue"] {
+    --primary-color: rgb(33, 150, 243);
+    --primary-color-dark: rgb(25, 118, 210);
+    --primary-color-light: rgba(33, 150, 243, 0.2);
+    --primary-color-very-light: rgba(33, 150, 243, 0.1);
+    
+    /* Applicare filtro per rendere il logo blu */
+    --logo-filter: hue-rotate(180deg) saturate(1.5);
+  }
+  
+  /* Tema Viola */
+  [data-theme="purple"] {
+    --primary-color: rgb(156, 39, 176);
+    --primary-color-dark: rgb(123, 31, 162);
+    --primary-color-light: rgba(156, 39, 176, 0.2);
+    --primary-color-very-light: rgba(156, 39, 176, 0.1);
+    
+    /* Applicare filtro per rendere il logo viola */
+    --logo-filter: hue-rotate(230deg) saturate(2);
+  }
+  
+  /* Tema Scuro (ancora più scuro) */
+  [data-theme="dark"] {
+    --primary-color: rgb(66, 66, 66);
+    --primary-color-dark: rgb(33, 33, 33);
+    --primary-color-light: rgba(66, 66, 66, 0.2);
+    --primary-color-very-light: rgba(66, 66, 66, 0.1);
+    
+    --bg-main: #000000;
+    --bg-sidebar: #1a1a1a;
+    --bg-header: #0a0a0a;
+    --bg-input: #1a1a1a;
+    --bg-message-bot: #1a1a1a;
+    
+    /* Logo in bianco e nero */
+    --logo-filter: grayscale(100%) brightness(1.5);
+  }
+  
+  /* Tema Chiaro */
+  [data-theme="light"] {
+    --primary-color: rgb(159, 136, 124);
+    --primary-color-dark: rgb(139, 116, 104);
+    --primary-color-light: rgba(159, 136, 124, 0.2);
+    --primary-color-very-light: rgba(159, 136, 124, 0.1);
+    
+    --bg-main: #f0f0f0;
+    --bg-sidebar: var(--primary-color);
+    --bg-header: #ffffff;
+    --bg-input: #ffffff;
+    --bg-message-bot: #e0e0e0;
+    --bg-message-user: var(--primary-color);
+    
+    --text-content: #333333;
+    --text-muted: #666666;
+    --border-color: #dddddd;
+    
+    /* Nessun filtro per il logo */
+    --logo-filter: none;
+  }
+  
+  /* Applica transizioni a tutti gli elementi che cambiano colore col tema */
+  body, .chat-container, .chat-sidebar, .chat-main, .chat-header, 
+  .messages-container, .chat-input-container, .message,
+  .sidebar-toggle-btn, .logo, .chat-header-logo, button {
+    transition: var(--theme-transition);
+  }
+  
+  /* Applica filtro al logo */
+  .logo, .chat-header-logo, .preloader__logo {
+    filter: var(--logo-filter);
+  }
+
+  /* Tema chiaro - Aggiustamenti specifici */
+[data-theme="light"] .message-content {
+    color: #333333;
+}
+
+[data-theme="light"] .user-message .message-content {
+    color: white;
+}
+
+[data-theme="light"] .sidebar-chats .chat-item-title,
+[data-theme="light"] .sidebar-chats .chat-item-date {
+    color: white;
+}
+
+[data-theme="light"] .modal-body {
+    color: #333333;
+}
+
+[data-theme="light"] .chat-header h1 {
+    color: #333333;
+}
+
+[data-theme="light"] #current-topic {
+    color: #555555;
+}
+
+[data-theme="light"] .disclaimer {
+    color: #555555;
+}

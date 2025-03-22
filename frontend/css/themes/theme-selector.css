@@ -1,0 +1,84 @@
+/* components/theme-selector.css */
+.theme-selector {
+    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 5px;
+  }
+  
+  .theme-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    position: relative;
+  }
+  
+  .theme-option:hover {
+    transform: scale(1.1);
+  }
+  
+  .theme-option.active {
+    border-color: white;
+    transform: scale(1.1);
+  }
+  
+  /* Aggiungi un indicatore di selezione */
+  .theme-option.active::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: white;
+  }
+  
+  /* Definisci i colori per ciascun tema */
+  .theme-option[data-theme="default"] {
+    background-color: rgb(159, 136, 124);
+  }
+  
+  .theme-option[data-theme="green"] {
+    background-color: rgb(76, 175, 80);
+  }
+  
+  .theme-option[data-theme="blue"] {
+    background-color: rgb(33, 150, 243);
+  }
+  
+  .theme-option[data-theme="purple"] {
+    background-color: rgb(156, 39, 176);
+  }
+  
+  .theme-option[data-theme="dark"] {
+    background-color: rgb(66, 66, 66);
+    border: 2px solid #444;
+  }
+  
+  .theme-option[data-theme="light"] {
+    background-color: #f0f0f0;
+    border: 2px solid #ddd;
+  }
+  
+  .theme-option[data-theme="light"].active {
+    border-color: #666;
+  }
+  
+  .theme-option[data-theme="light"].active::after {
+    background-color: #666;
+  }
+  
+  .theme-selector-label {
+    width: 100%;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+  }
