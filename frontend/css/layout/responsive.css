@@ -1,0 +1,44 @@
+/* layout/responsive.css */
+@media (max-width: 768px) {
+    .chat-sidebar {
+        position: fixed;
+        left: -260px;
+        height: 100%;
+    }
+    
+    .sidebar-open .chat-sidebar {
+        left: 0;
+    }
+    
+    .mobile-menu {
+        display: block;
+    }
+    
+    .sidebar-toggle-btn {
+        display: none !important;
+    }
+    
+    .welcome-message {
+        max-width: 95%;
+        padding: 20px 15px;
+    }
+    
+    .suggestion-chips {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .suggestion-chip {
+        justify-content: center;
+    }
+    
+    .message {
+        max-width: 90%;
+    }
+}
+
+@media (min-width: 769px) {
+    .sidebar-toggle-btn {
+        display: flex !important;
+    }
+}

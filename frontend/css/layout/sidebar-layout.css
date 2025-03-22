@@ -1,0 +1,65 @@
+/* layout/sidebar-layout.css */
+.sidebar-collapsed .chat-sidebar {
+    width: 60px;
+    overflow: hidden;
+}
+
+.sidebar-collapsed .sidebar-header h2,
+.sidebar-collapsed .chat-item-content,
+.sidebar-collapsed .new-chat span,
+.sidebar-collapsed .user-info span,
+.sidebar-collapsed .delete-chat-btn {
+    display: none;
+}
+
+.sidebar-collapsed .logo {
+    width: 40px;
+    margin: 0 auto;
+}
+
+.sidebar-collapsed .sidebar-header {
+    justify-content: center;
+    padding: 15px 0;
+}
+
+.sidebar-collapsed #new-chat-btn {
+    padding: 10px 0;
+    justify-content: center;
+}
+
+.sidebar-collapsed #new-chat-btn i {
+    margin: 0;
+}
+
+.sidebar-collapsed .sidebar-footer {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.sidebar-collapsed .user-info {
+    justify-content: center;
+}
+
+.sidebar-collapsed .chat-item {
+    justify-content: center;
+    padding: 10px 5px;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-open .sidebar-overlay {
+    display: block;
+    opacity: 1;
+}

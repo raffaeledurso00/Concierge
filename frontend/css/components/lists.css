@@ -1,0 +1,88 @@
+/* components/lists.css */
+.formatted-section {
+    margin: 12px 0;
+    border-left: 3px solid #9f887c;
+    padding-left: 10px;
+}
+
+.formatted-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.list-item {
+    padding: 8px;
+    margin-bottom: 8px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.list-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.item-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.item-details {
+    font-size: 0.9em;
+    font-style: italic;
+    color: #aaa;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.item-price {
+    font-weight: bold;
+    color: #9f887c;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background-color: rgba(159, 136, 124, 0.1);
+}
+
+/* Stili specifici per i diversi tipi di liste */
+.menu-section .section-title {
+    color: #e67e22;
+}
+
+.menu-section {
+    border-left-color: #e67e22;
+}
+
+.menu-item .item-price {
+    color: #e67e22;
+    background-color: rgba(230, 126, 34, 0.1);
+}
+
+.attivita-section .section-title {
+    color: #2ecc71;
+}
+
+.attivita-section {
+    border-left-color: #2ecc71;
+}
+
+.attivita-item .item-price {
+    color: #2ecc71;
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+.eventi-section .section-title {
+    color: #3498db;
+}
+
+.eventi-section {
+    border-left-color: #3498db;
+}
+
+.eventi-item .item-price {
+    color: #3498db;
+    background-color: rgba(52, 152, 219, 0.1);
+}

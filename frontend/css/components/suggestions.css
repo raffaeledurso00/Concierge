@@ -1,0 +1,64 @@
+/* components/suggestions.css */
+.welcome-message {
+    text-align: center;
+    padding: 30px 20px;
+    background-color: rgba(159, 136, 124, 0.1);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    max-width: 80%;
+    align-self: center;
+}
+
+.suggestion-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.suggestion-chip {
+    padding: 8px 16px;
+    background-color: rgb(159, 136, 124);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.suggestion-chip:hover {
+    background-color: rgb(139, 116, 104);
+    transform: translateY(-2px);
+}
+
+.suggestion-chip i {
+    font-size: 0.8rem;
+}
+
+.quick-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.quick-suggestion {
+    background-color: rgba(159, 136, 124, 0.2);
+    color: #e0e0e0;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid rgba(159, 136, 124, 0.3);
+}
+
+.quick-suggestion:hover {
+    background-color: rgba(159, 136, 124, 0.4);
+    transform: translateY(-2px);
+}
