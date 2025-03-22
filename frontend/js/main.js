@@ -112,3 +112,119 @@ document.addEventListener('DOMContentLoaded', function() {
   // Avvia il caricamento sequenziale
   loadScriptsSequentially();
 });
+
+// Aggiungi questo alla fine del file frontend/js/main.js
+
+// Fix semplice per evitare i crash della UI
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+      // Attendi che la pagina sia caricata completamente
+      console.log('Applicando fix semplice per prevenire crash');
+      
+      // Fix per i pulsanti di eliminazione chat
+      const fixDeleteButtons = function() {
+          const deleteButtons = document.querySelectorAll('.delete-chat-btn');
+          deleteButtons.forEach(btn => {
+              // Rimuovi eventuali handler esistenti
+              const newBtn = btn.cloneNode(true);
+              if (btn.parentNode) {
+                  btn.parentNode.replaceChild(newBtn, btn);
+              }
+              
+              // Aggiungi un handler semplice e diretto
+              newBtn.onclick = function(e) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  
+                  const chatId = this.getAttribute('data-id');
+                  if (!chatId) return;
+                  
+                  if (confirm('Sei sicuro di voler eliminare questa chat?')) {
+                      try {
+                          // Prova ad usare ChatCore
+                          if (window.ChatCore && window.ChatCore.deleteChat) {
+                              window.ChatCore.deleteChat(chatId);
+                          } else {
+                              // Fallback diretto
+                              const chats = JSON.parse(localStorage.getItem('villa_petriolo_chats') || '{}');
+                              delete chats[chatId];
+                              localStorage.setItem('villa_petriolo_chats', JSON.stringify(chats));
+                              window.location.reload();
+                          }
+                      } catch (err) {
+                          console.error(err);
+                          alert('Errore durante l\'eliminazione. Ricarica la pagina e riprova.');
+                      }
+                  }
+              };
+          });
+      };
+      
+      // Fix per il form di chat
+      const chatForm = document.getElementById('chat-form');
+      if (chatForm) {
+          // Rimuovi tutti gli event listener
+          const newForm = chatForm.cloneNode(true);
+          chatForm.parentNode.replaceChild(newForm, chatForm);
+          
+          // Aggiungi un solo handler semplice
+          newForm.onsubmit = function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              const input = document.getElementById('message-input');
+              if (!input || !input.value.trim()) return false;
+              
+              const message = input.value.trim();
+              
+              if (window.ChatCore && window.ChatCore.handleMessageSubmit) {
+                  window.ChatCore.handleMessageSubmit(message);
+              }
+              
+              return false;
+          };
+      }
+      
+      // Fix per il pulsante "Nuova chat"
+      const newChatBtn = document.getElementById('new-chat-btn');
+      if (newChatBtn) {
+          const newBtn = newChatBtn.cloneNode(true);
+          newChatBtn.parentNode.replaceChild(newBtn, newChatBtn);
+          
+          newBtn.onclick = function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              
+              if (window.ChatCore && window.ChatCore.createNewChat) {
+                  window.ChatCore.createNewChat();
+              }
+          };
+      }
+      
+      // Esegui subito una volta
+      fixDeleteButtons();
+      
+      // Monitora l'aggiunta di nuovi pulsanti delete
+      const observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+              if (mutation.addedNodes && mutation.addedNodes.length) {
+                  for (let i = 0; i < mutation.addedNodes.length; i++) {
+                      const node = mutation.addedNodes[i];
+                      if (node.classList && node.classList.contains('delete-chat-btn') || 
+                          (node.nodeType === 1 && node.querySelector('.delete-chat-btn'))) {
+                          setTimeout(fixDeleteButtons, 10);
+                          break;
+                      }
+                  }
+              }
+          });
+      });
+      
+      // Osserva il contenitore delle chat
+      const sidebarChats = document.getElementById('sidebar-chats');
+      if (sidebarChats) {
+          observer.observe(sidebarChats, { childList: true, subtree: true });
+      }
+      
+  }, 500);
+});
