@@ -345,47 +345,64 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Display message in UI with formatted lists
-    function displayMessage(text, sender) {
-        const messageRow = document.createElement('div');
-        messageRow.className = `message-row ${sender === 'user' ? 'user-row' : 'bot-row'}`;
-        
-        // Formatta il messaggio solo se è del bot e abbiamo il formattatore
-        let formattedText = text;
-        if (sender === 'bot' && window.messageFormatter) {
-            formattedText = window.messageFormatter.format(text);
-        }
-        
-        messageRow.innerHTML = `
-            <div class="message ${sender === 'user' ? 'user-message' : 'bot-message'}">
-                <div class="message-avatar">
-                    <i class="${sender === 'user' ? 'fas fa-user' : 'fas fa-concierge-bell'}"></i>
-                </div>
-                <div class="message-content">
-                    ${formattedText}
-                </div>
-            </div>
-        `;
-        
-        // Aggiunge suggerimenti rapidi se è un messaggio del bot che finisce con una domanda
-        if (sender === 'bot' && text.trim().endsWith('?')) {
-            addQuickSuggestionsToMessage(messageRow, text);
-        }
-        
-        messagesContainer.appendChild(messageRow);
-        
-        // Imposta la variabile --item-index per ogni elemento della lista per l'animazione
-        const listItems = messageRow.querySelectorAll('.list-item');
-        listItems.forEach((item, index) => {
-            item.style.setProperty('--item-index', index);
-        });
-        
-        // Scorri alla fine del contenitore dei messaggi
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+// Display message in UI with formatted lists
+function displayMessage(text, sender) {
+    const messageRow = document.createElement('div');
+    messageRow.className = `message-row ${sender === 'user' ? 'user-row' : 'bot-row'}`;
+    
+    // Formatta il messaggio solo se è del bot e abbiamo il formattatore
+    let formattedText = text;
+    if (sender === 'bot' && window.messageFormatter) {
+        formattedText = window.messageFormatter.format(text);
     }
     
+    messageRow.innerHTML = `
+        <div class="message ${sender === 'user' ? 'user-message' : 'bot-message'}">
+            <div class="message-avatar">
+                <i class="${sender === 'user' ? 'fas fa-user' : 'fas fa-concierge-bell'}"></i>
+            </div>
+            <div class="message-content">
+                ${formattedText}
+            </div>
+        </div>
+    `;
+    
+    // Aggiunge suggerimenti rapidi solo se è un messaggio del bot 
+    // che finisce con una domanda e non ha una formattazione speciale
+    if (sender === 'bot') {
+        // Verifica se il messaggio contiene formattazione speciale
+        const hasFormattedContent = messageRow.querySelector('.formatted-section');
+        
+        // Verifica se il messaggio finisce con una domanda 
+        const lastChar = text.trim().slice(-1);
+        const endsWithQuestion = lastChar === '?';
+        
+        // Aggiungi i suggerimenti rapidi se non ha formattazione o se ha formattazione
+        // ma contiene anche una conclusione con punto interrogativo
+        if (endsWithQuestion || (hasFormattedContent && text.includes('?'))) {
+            addQuickSuggestionsToMessage(messageRow, text);
+        }
+    }
+    
+    messagesContainer.appendChild(messageRow);
+    
+    // Imposta la variabile --item-index per ogni elemento della lista per l'animazione
+    const listItems = messageRow.querySelectorAll('.list-item');
+    listItems.forEach((item, index) => {
+        item.style.setProperty('--item-index', index);
+    });
+    
+    // Scorri alla fine del contenitore dei messaggi
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
     // Funzione per aggiungere suggerimenti rapidi a un messaggio del bot
 // Funzione per aggiungere suggerimenti rapidi a un messaggio del bot
+// Funzione migliorata per aggiungere suggerimenti rapidi a un messaggio del bot
 function addQuickSuggestionsToMessage(messageRow, text) {
+    // Non aggiungere suggerimenti se il testo è vuoto
+    if (!text || text.trim().length === 0) return;
+    
     // Analizza l'argomento del messaggio per contestualizzare i suggerimenti
     let messageContext = 'generale';
     
@@ -399,51 +416,54 @@ function addQuickSuggestionsToMessage(messageRow, text) {
         messageContext = 'servizi';
     }
     
+    // Verifica se il messaggio termina con una domanda
+    // Miglioriamo questo controllo per identificare meglio le domande alla fine
+    const lastSentences = text.split(/[.!]/).filter(s => s.trim().length > 0);
+    const lastSentence = lastSentences[lastSentences.length - 1].trim();
+    const containsQuestionAtEnd = lastSentence.includes('?');
+    
     // Definisci suggerimenti in base al contesto
     let suggestions = [];
     
-    // Verifica se il messaggio contiene una domanda
-    const containsQuestion = text.includes('?');
-    
-    if (containsQuestion) {
+    if (containsQuestionAtEnd) {
         switch (messageContext) {
             case 'ristorante':
                 suggestions = [
                     'Vorrei prenotare un tavolo',
                     'Avete opzioni vegetariane?',
-                    'A che ora apre?',
-                    'Prezzo medio?'
+                    'Orari di apertura?',
+                    'Prezzo medio per persona?'
                 ];
                 break;
             case 'attivita':
                 suggestions = [
-                    'Quanto dura?',
+                    'Quanto dura questa attività?',
                     'Quanto costa?',
-                    'È adatto ai bambini?',
-                    'Come si prenota?'
+                    'Adatta ai bambini?',
+                    'Come posso prenotare?'
                 ];
                 break;
             case 'eventi':
                 suggestions = [
-                    'Quando si svolge?',
-                    'Devo prenotare?',
-                    'Prezzo del biglietto?',
-                    'Altri eventi simili?'
+                    'A che ora inizia?',
+                    'Serve prenotare?',
+                    'Qual è il prezzo?',
+                    'Altri eventi in programma?'
                 ];
                 break;
             case 'servizi':
                 suggestions = [
-                    'Orari di check-in?',
-                    'Avete il WiFi?',
+                    'Orari del check-in?',
+                    'È disponibile il WiFi?',
                     'C\'è un parcheggio?',
-                    'Servizio in camera?'
+                    'Offrite servizio in camera?'
                 ];
                 break;
             default:
                 suggestions = [
+                    'Sì, grazie',
                     'Ditemi di più',
-                    'Costi?',
-                    'Orari?',
+                    'Orari e prezzi?',
                     'Come posso prenotare?'
                 ];
         }
@@ -462,7 +482,7 @@ function addQuickSuggestionsToMessage(messageRow, text) {
                 suggestions = [
                     'Più informazioni',
                     'Altre attività?',
-                    'Prenotazione',
+                    'Vorrei prenotare',
                     'Tour privati?'
                 ];
                 break;

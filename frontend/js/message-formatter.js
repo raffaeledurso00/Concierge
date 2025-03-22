@@ -37,6 +37,15 @@ class MessageFormatter {
                 ]
             }
         ];
+        
+        // Pattern per frasi di conclusione che non dovrebbero essere incluse nelle liste
+        this.conclusionPatterns = [
+            /desidera\s+(?:altre|ulteriori)?\s*informazioni/i,
+            /vorrebbe\s+prenotare/i,
+            /(?:posso|le\s+serve|ha\s+bisogno)\s+(?:di\s+)?(?:aiutarla|altro)/i,
+            /(?:c'è|c'|ci)\s+(?:altro|qualcos'altro)\s+(?:che\s+)?(?:le\s+)?(?:interessa|serve)/i,
+            /(?:vuole|desidera)\s+(?:sapere|conoscere)\s+altro/i
+        ];
     }
     
     /**
@@ -60,6 +69,21 @@ class MessageFormatter {
         // Se non contiene sezioni formattabili, restituisci il testo originale
         if (!containsFormattableContent) {
             return text;
+        }
+        
+        // Estrai eventuali frasi di conclusione prima della formattazione
+        let conclusionText = '';
+        for (const pattern of this.conclusionPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                // Trova l'indice della frase di conclusione
+                const index = text.indexOf(match[0]);
+                // Estrai tutto dal punto di inizio della frase fino alla fine
+                conclusionText = text.substring(index);
+                // Rimuovi la parte conclusiva dal testo da formattare
+                text = text.substring(0, index);
+                break;
+            }
         }
         
         // Applica formattazione a tutte le sezioni riconosciute
@@ -95,6 +119,11 @@ class MessageFormatter {
             });
         });
         
+        // Aggiungi nuovamente la frase di conclusione come testo normale
+        if (conclusionText) {
+            formattedText += `<p class="conclusion-text">${conclusionText}</p>`;
+        }
+        
         return formattedText;
     }
     
@@ -115,6 +144,11 @@ class MessageFormatter {
             const trimmedSentence = sentence.trim();
             if (trimmedSentence.length === 0) return;
             
+            // Salta frasi che sembrano conclusive invece che elementi della lista
+            if (this.conclusionPatterns.some(pattern => pattern.test(trimmedSentence))) {
+                return;
+            }
+            
             // Gestisci diversamente le frasi con o senza virgole
             if (trimmedSentence.includes(',')) {
                 // Dividi per virgole e processa ogni parte
@@ -132,7 +166,9 @@ class MessageFormatter {
         });
         
         // Rimuovi duplicati e filtra elementi vuoti
-        const uniqueItems = [...new Set(cleanItems)].filter(item => item && item.title.length > 1);
+        const uniqueItems = [...new Set(cleanItems.filter(Boolean))].filter(item => 
+            item && item.title && item.title.length > 1 && !this.isConclusion(item.title)
+        );
         
         // Costruisci la lista HTML
         const listItems = uniqueItems.map(item => {
@@ -149,11 +185,22 @@ class MessageFormatter {
     }
     
     /**
+     * Verifica se una stringa è una frase conclusiva
+     * @param {string} text - Testo da verificare
+     * @returns {boolean} - True se è una conclusione
+     */
+    isConclusion(text) {
+        return this.conclusionPatterns.some(pattern => pattern.test(text));
+    }
+    
+    /**
      * Pulisce il testo dell'elemento, rimuovendo caratteri indesiderati e separando dettagli e prezzo
      * @param {string} text - Testo dell'elemento da pulire
      * @returns {Object} - Oggetto contenente titolo, dettagli e prezzo
      */
     cleanItemText(text) {
+        if (!text || text.trim().length === 0) return null;
+        
         // Oggetto risultante
         const result = {
             title: '',
@@ -161,8 +208,14 @@ class MessageFormatter {
             price: ''
         };
         
-        // Rimuovi i simboli () vuoti
-        const cleanedText = text.replace(/\(\s*\)/g, '').trim();
+        // Rimuovi i simboli () vuoti e spazi extra
+        let cleanedText = text.replace(/\(\s*\)/g, '').trim();
+        cleanedText = cleanedText.replace(/\s{2,}/g, ' ');
+        
+        // Salta se è una frase conclusiva
+        if (this.isConclusion(cleanedText)) {
+            return null;
+        }
         
         // Estrai prezzo se presente (formato €XX o €XX.XX)
         const priceMatch = cleanedText.match(/(€\s*\d+(?:[.,]\d+)?)/);
