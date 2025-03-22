@@ -1,246 +1,310 @@
 // frontend/js/message-formatter.js
 
 /**
- * Utility per formattare i messaggi con liste e formattazione avanzata
+ * MessageFormatter che formatta tutte le sezioni come liste di elementi
+ * Assicura che attività ed eventi siano visualizzati come elementi di lista separati
+ * proprio come il menu del ristorante
  */
-
 class MessageFormatter {
     constructor() {
-        // Pattern per riconoscere le sezioni nel testo
-        this.sectionPatterns = [
-            // Pattern per il Menu
-            {
-                type: 'menu',
-                patterns: [
-                    /ANTIPASTI:(.+?)(?=PRIMI:|SECONDI:|DOLCI:|$)/is,
-                    /PRIMI:(.+?)(?=ANTIPASTI:|SECONDI:|DOLCI:|$)/is,
-                    /SECONDI:(.+?)(?=ANTIPASTI:|PRIMI:|DOLCI:|$)/is,
-                    /DOLCI:(.+?)(?=ANTIPASTI:|PRIMI:|SECONDI:|$)/is
-                ]
-            },
-            // Pattern per Attività
-            {
-                type: 'attivita',
-                patterns: [
-                    /INTERNE:(.+?)(?=ESTERNE:|ESCURSIONI:|$)/is,
-                    /ESTERNE:(.+?)(?=INTERNE:|ESCURSIONI:|$)/is,
-                    /ESCURSIONI:(.+?)(?=INTERNE:|ESTERNE:|$)/is
-                ]
-            },
-            // Pattern per Eventi
-            {
-                type: 'eventi',
-                patterns: [
-                    /SPECIALI:(.+?)(?=SETTIMANALI:|STAGIONALI:|$)/is,
-                    /SETTIMANALI:(.+?)(?=SPECIALI:|STAGIONALI:|$)/is,
-                    /STAGIONALI:(.+?)(?=SPECIALI:|SETTIMANALI:|$)/is
-                ]
-            }
-        ];
+        // Definizione delle sezioni
+        this.sections = {
+            menu: ['ANTIPASTI:', 'PRIMI:', 'SECONDI:', 'DOLCI:'],
+            attivita: ['INTERNE:', 'ESTERNE:', 'ESCURSIONI:'],
+            eventi: ['SPECIALI:', 'SETTIMANALI:', 'STAGIONALI:']
+        };
         
-        // Pattern per frasi di conclusione che non dovrebbero essere incluse nelle liste
+        // Pattern per riconoscere le conclusioni
         this.conclusionPatterns = [
-            /desidera\s+(?:altre|ulteriori)?\s*informazioni/i,
-            /vorrebbe\s+prenotare/i,
-            /(?:posso|le\s+serve|ha\s+bisogno)\s+(?:di\s+)?(?:aiutarla|altro)/i,
-            /(?:c'è|c'|ci)\s+(?:altro|qualcos'altro)\s+(?:che\s+)?(?:le\s+)?(?:interessa|serve)/i,
-            /(?:vuole|desidera)\s+(?:sapere|conoscere)\s+altro/i
+            /([^.!?]+\?)[^?]*$/,  // Ultima frase che termina con '?'
+            /Desidera\s+(?:altre|ulteriori)?\s*informazioni/i,
+            /(?:vorrebbe|vuole)\s+prenotare/i,
+            /Quale\s+(?:attività|piatto|evento)/i,
+            /(?:le|ti)\s+interessa/i,
+            /(?:come|posso)\s+(?:posso|aiutarti|aiutarla)/i
         ];
     }
     
     /**
-     * Formatta il testo del messaggio con liste dove appropriato
-     * @param {string} text - Il testo originale
-     * @returns {string} - Il testo formattato con HTML
+     * Formatta il testo del messaggio
      */
     format(text) {
         if (!text) return '';
         
-        // Prima controlla se è un messaggio che contiene sezioni
-        let containsFormattableContent = false;
-        this.sectionPatterns.forEach(section => {
-            section.patterns.forEach(pattern => {
-                if (pattern.test(text)) {
-                    containsFormattableContent = true;
+        // Controlla se il testo contiene sezioni da formattare
+        let hasSection = false;
+        for (const type in this.sections) {
+            for (const section of this.sections[type]) {
+                if (text.includes(section)) {
+                    hasSection = true;
+                    break;
                 }
-            });
-        });
+            }
+            if (hasSection) break;
+        }
         
-        // Se non contiene sezioni formattabili, restituisci il testo originale
-        if (!containsFormattableContent) {
+        // Se non ci sono sezioni, restituisci il testo originale
+        if (!hasSection) {
             return text;
         }
         
-        // Estrai eventuali frasi di conclusione prima della formattazione
-        let conclusionText = '';
-        for (const pattern of this.conclusionPatterns) {
-            const match = text.match(pattern);
-            if (match) {
-                // Trova l'indice della frase di conclusione
-                const index = text.indexOf(match[0]);
-                // Estrai tutto dal punto di inizio della frase fino alla fine
-                conclusionText = text.substring(index);
-                // Rimuovi la parte conclusiva dal testo da formattare
-                text = text.substring(0, index);
-                break;
-            }
-        }
+        // Estrai la domanda/conclusione dal testo
+        const { mainText, conclusionText } = this.extractConclusion(text);
         
-        // Applica formattazione a tutte le sezioni riconosciute
-        let formattedText = text;
+        // Formatta il testo principale con le sezioni
+        let formattedText = this.formatSections(mainText);
         
-        this.sectionPatterns.forEach(section => {
-            section.patterns.forEach(pattern => {
-                // Cerca la sezione nel testo
-                const match = formattedText.match(pattern);
-                if (match && match[1]) {
-                    // Contenuto della sezione
-                    const sectionContent = match[1].trim();
-                    
-                    // Crea lista formattata
-                    const formattedSection = this.createFormattedList(sectionContent, section.type);
-                    
-                    // Sostituisci la sezione originale con quella formattata
-                    // Usa RegExp con il flag 's' per far sì che il punto matchi anche i newline
-                    const fullPattern = new RegExp(pattern.source, 'is');
-                    
-                    // Estrai il titolo della sezione (es. "ANTIPASTI:")
-                    const sectionTitle = formattedText.match(fullPattern)[0].split(':')[0] + ':';
-                    
-                    // Sostituisci la sezione con titolo + lista formattata
-                    formattedText = formattedText.replace(
-                        fullPattern, 
-                        `<div class="formatted-section ${section.type}-section">
-                            <div class="section-title">${sectionTitle}</div>
-                            ${formattedSection}
-                        </div>`
-                    );
-                }
-            });
-        });
-        
-        // Aggiungi nuovamente la frase di conclusione come testo normale
+        // Aggiungi la conclusione se presente
         if (conclusionText) {
-            formattedText += `<p class="conclusion-text">${conclusionText}</p>`;
+            formattedText += `<div class="conclusion-text">${conclusionText}</div>`;
         }
         
         return formattedText;
     }
     
     /**
-     * Crea una lista formattata dal contenuto della sezione
-     * @param {string} content - Contenuto della sezione
-     * @param {string} type - Tipo di sezione (menu, attivita, eventi)
-     * @returns {string} - HTML della lista formattata
+     * Estrae la conclusione dal testo
      */
-    createFormattedList(content, type) {
-        // Array per contenere gli elementi della lista puliti
-        const cleanItems = [];
-        
-        // Dividi in frasi (separate da punto o punto e virgola)
-        const sentences = content.split(/[\.;](?=\s|$)/);
-        
-        sentences.forEach(sentence => {
-            const trimmedSentence = sentence.trim();
-            if (trimmedSentence.length === 0) return;
-            
-            // Salta frasi che sembrano conclusive invece che elementi della lista
-            if (this.conclusionPatterns.some(pattern => pattern.test(trimmedSentence))) {
-                return;
+    extractConclusion(text) {
+        // Prova ciascun pattern di conclusione
+        for (const pattern of this.conclusionPatterns) {
+            const match = text.match(pattern);
+            if (match && match.index > text.length / 2) {  // Deve essere nella seconda metà del testo
+                const conclusionText = match[0];
+                const mainText = text.substring(0, match.index);
+                return { mainText, conclusionText };
             }
-            
-            // Gestisci diversamente le frasi con o senza virgole
-            if (trimmedSentence.includes(',')) {
-                // Dividi per virgole e processa ogni parte
-                const parts = trimmedSentence.split(',');
-                parts.forEach(part => {
-                    const trimmedPart = part.trim();
-                    if (trimmedPart.length > 0) {
-                        cleanItems.push(this.cleanItemText(trimmedPart));
-                    }
-                });
-            } else {
-                // Aggiungi la frase intera come elemento
-                cleanItems.push(this.cleanItemText(trimmedSentence));
-            }
-        });
+        }
         
-        // Rimuovi duplicati e filtra elementi vuoti
-        const uniqueItems = [...new Set(cleanItems.filter(Boolean))].filter(item => 
-            item && item.title && item.title.length > 1 && !this.isConclusion(item.title)
-        );
-        
-        // Costruisci la lista HTML
-        const listItems = uniqueItems.map(item => {
-            return `
-                <li class="list-item ${type}-item">
-                    <div class="item-name">${item.title}</div>
-                    ${item.details ? `<div class="item-details">${item.details}</div>` : ''}
-                    ${item.price ? `<div class="item-price">${item.price}</div>` : ''}
-                </li>
-            `;
-        });
-        
-        return `<ul class="formatted-list ${type}-list">${listItems.join('')}</ul>`;
+        // Se non c'è conclusione, restituisci il testo originale
+        return { mainText: text, conclusionText: '' };
     }
     
     /**
-     * Verifica se una stringa è una frase conclusiva
-     * @param {string} text - Testo da verificare
-     * @returns {boolean} - True se è una conclusione
+     * Formatta le sezioni nel testo
      */
-    isConclusion(text) {
-        return this.conclusionPatterns.some(pattern => pattern.test(text));
-    }
-    
-    /**
-     * Pulisce il testo dell'elemento, rimuovendo caratteri indesiderati e separando dettagli e prezzo
-     * @param {string} text - Testo dell'elemento da pulire
-     * @returns {Object} - Oggetto contenente titolo, dettagli e prezzo
-     */
-    cleanItemText(text) {
-        if (!text || text.trim().length === 0) return null;
+    formatSections(text) {
+        let result = text;
         
-        // Oggetto risultante
-        const result = {
-            title: '',
-            details: '',
-            price: ''
-        };
-        
-        // Rimuovi i simboli () vuoti e spazi extra
-        let cleanedText = text.replace(/\(\s*\)/g, '').trim();
-        cleanedText = cleanedText.replace(/\s{2,}/g, ' ');
-        
-        // Salta se è una frase conclusiva
-        if (this.isConclusion(cleanedText)) {
-            return null;
-        }
-        
-        // Estrai prezzo se presente (formato €XX o €XX.XX)
-        const priceMatch = cleanedText.match(/(€\s*\d+(?:[.,]\d+)?)/);
-        if (priceMatch) {
-            result.price = priceMatch[1].replace(/\s+/g, ''); // Rimuovi spazi nel prezzo
-            
-            // Rimuovi il prezzo dal testo dell'elemento
-            const textWithoutPrice = cleanedText.replace(priceMatch[0], '').trim();
-            result.title = textWithoutPrice;
-        } else {
-            result.title = cleanedText;
-        }
-        
-        // Estrai dettagli tra parentesi se presenti
-        const detailsMatch = result.title.match(/\(([^)]+)\)/);
-        if (detailsMatch) {
-            result.details = detailsMatch[1].trim();
-            
-            // Rimuovi i dettagli tra parentesi dal titolo
-            result.title = result.title.replace(/\s*\([^)]+\)/, '').trim();
+        // Cerca tutte le sezioni nel testo
+        for (const type in this.sections) {
+            for (const sectionHeader of this.sections[type]) {
+                // Crea un'espressione regolare per trovare la sezione e il suo contenuto
+                const sectionRegex = new RegExp(
+                    `(${this.escapeRegExp(sectionHeader)})([\\s\\S]*?)(?=(?:${this.sections[type].map(s => this.escapeRegExp(s)).join('|')})|$)`, 
+                    'i'
+                );
+                
+                // Cerca la sezione nel testo
+                const match = result.match(sectionRegex);
+                if (match) {
+                    // Formatta il contenuto della sezione
+                    const header = match[1];
+                    const content = match[2];
+                    
+                    // Estrai gli elementi dalla sezione
+                    const items = this.extractItemsFromSection(content, type);
+                    
+                    // Crea il markup HTML per la sezione con elementi in lista
+                    const formattedSection = `
+                        <div class="formatted-section ${type}-section">
+                            <div class="section-title">${header}</div>
+                            <ul class="formatted-list ${type}-list">
+                                ${items.map(item => this.createListItemHtml(item, type)).join('')}
+                            </ul>
+                        </div>
+                    `;
+                    
+                    // Sostituisci la sezione originale
+                    result = result.replace(match[0], formattedSection);
+                }
+            }
         }
         
         return result;
     }
+    
+    /**
+     * Estrae gli elementi da una sezione
+     */
+    extractItemsFromSection(content, type) {
+        const items = [];
+        
+        // Prima puliamo il testo: rimuovi parentesi incomplete, spazi multipli, ecc.
+        let cleanedContent = this.cleanText(content);
+        
+        // Dividi il contenuto in blocchi separati da linee vuote
+        const blocks = cleanedContent.split(/\n\s*\n/)
+            .map(block => block.trim())
+            .filter(block => block.length > 0);
+        
+        // Se c'è un solo blocco, proviamo a dividerlo per linee
+        if (blocks.length <= 1) {
+            const lines = cleanedContent.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+            
+            // Per ciascuna linea, cerca di estrarre un elemento
+            for (const line of lines) {
+                const item = this.parseLineAsItem(line);
+                if (item) {
+                    items.push(item);
+                }
+            }
+        } else {
+            // Abbiamo più blocchi, ciascuno potrebbe essere un elemento completo
+            for (const block of blocks) {
+                const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                
+                // Il primo elemento con un prezzo è probabilmente l'item principale
+                let mainLine = '';
+                let price = '';
+                let details = [];
+                
+                for (const line of lines) {
+                    const priceMatch = line.match(/(€\s*\d+(?:[.,]\d+)?)/);
+                    if (priceMatch && !price) {
+                        // Se troviamo un prezzo e non ne abbiamo già uno, questa è la linea principale
+                        price = priceMatch[1];
+                        mainLine = line.replace(price, '').trim();
+                    } else if (line.length < 15) {
+                        // Linee brevi sono probabilmente dettagli come "2 ore" o "giornaliero"
+                        details.push(line);
+                    } else if (!mainLine) {
+                        // Se non abbiamo ancora una linea principale, questa lo diventa
+                        mainLine = line;
+                    } else {
+                        // Altrimenti è un dettaglio
+                        details.push(line);
+                    }
+                }
+                
+                // Se abbiamo almeno una linea principale o un prezzo, crea un elemento
+                if (mainLine || price) {
+                    items.push({
+                        name: mainLine,
+                        price: price,
+                        details: details.join(', ')
+                    });
+                }
+            }
+        }
+        
+        // Se non abbiamo trovato elementi, fai un secondo tentativo cercando direttamente i prezzi
+        if (items.length === 0) {
+            const priceRegex = /(€\s*\d+(?:[.,]\d+)?)/g;
+            let match;
+            
+            while ((match = priceRegex.exec(cleanedContent)) !== null) {
+                const price = match[1];
+                
+                // Cerca il testo prima del prezzo
+                const beforeIndex = Math.max(0, match.index - 100);
+                const textBefore = cleanedContent.substring(beforeIndex, match.index).trim();
+                
+                // L'ultimo segmento prima del prezzo è probabilmente il nome dell'elemento
+                const segments = textBefore.split(/[,.:;]/).map(s => s.trim());
+                const name = segments.length > 0 ? segments[segments.length - 1] : 'Elemento';
+                
+                items.push({
+                    name: name,
+                    price: price,
+                    details: ''
+                });
+            }
+        }
+        
+        return items;
+    }
+    
+    /**
+     * Analizza una linea di testo per estrarne un elemento
+     */
+    parseLineAsItem(line) {
+        // Cerca un prezzo nella linea
+        const priceMatch = line.match(/(€\s*\d+(?:[.,]\d+)?)/);
+        
+        if (priceMatch) {
+            // Se c'è un prezzo, estrai nome e prezzo
+            const price = priceMatch[1];
+            let name = line.replace(price, '').trim();
+            
+            // Pulisci il nome
+            name = this.cleanItemText(name);
+            
+            return {
+                name: name,
+                price: price,
+                details: ''
+            };
+        } else if (line.length > 5) {
+            // Se non c'è un prezzo ma la linea è abbastanza lunga, potrebbe essere un elemento senza prezzo
+            return {
+                name: this.cleanItemText(line),
+                price: '',
+                details: ''
+            };
+        }
+        
+        // Non è un elemento valido
+        return null;
+    }
+    
+    /**
+     * Crea l'HTML per un elemento della lista
+     */
+    createListItemHtml(item, type) {
+        return `
+            <li class="list-item ${type}-item">
+                <div class="item-content">
+                    <div class="item-name">${item.name || 'Elemento'}</div>
+                    ${item.details ? `<div class="item-details">${item.details}</div>` : ''}
+                </div>
+                ${item.price ? `<div class="item-price">${item.price}</div>` : ''}
+            </li>
+        `;
+    }
+    
+    /**
+     * Pulisce il testo, rimuovendo problemi comuni
+     */
+    cleanText(text) {
+        // Rimuovi caratteri problematici e normalizza il testo
+        return text
+            .replace(/\(\s*\)/g, '') // Rimuovi parentesi vuote
+            .replace(/\(\s*$/, '') // Rimuovi parentesi aperte alla fine delle righe
+            .replace(/^\s*\)/, '') // Rimuovi parentesi chiuse all'inizio delle righe
+            .replace(/\s{2,}/g, ' ') // Rimuovi spazi multipli
+            .trim();
+    }
+    
+    /**
+     * Pulisce il testo di un singolo elemento
+     */
+    cleanItemText(text) {
+        let result = text;
+        
+        // Rimuovi parentesi vuote o incomplete
+        result = result.replace(/\(\s*\)/g, '');
+        result = result.replace(/\(\s*$/, '');
+        result = result.replace(/^\s*\)/, '');
+        
+        // Rimuovi punteggiatura alla fine
+        result = result.replace(/[,;.:]+$/, '');
+        
+        // Rimuovi spazi multipli
+        result = result.replace(/\s{2,}/g, ' ').trim();
+        
+        return result;
+    }
+    
+    /**
+     * Escape di caratteri speciali per RegExp
+     */
+    escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
 }
 
-// Crea istanza globale
+// Crea l'istanza globale
 window.messageFormatter = new MessageFormatter();
