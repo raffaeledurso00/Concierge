@@ -50,12 +50,10 @@ const SuggestionsComponent = {
             messageInput.value = suggestion;
             // Usa un timeout per garantire che l'input abbia il valore aggiornato
             setTimeout(function() {
-              // Utilizza Event constructor per compatibilità massima
-              const submitEvent = new Event('submit', {
-                bubbles: true,
-                cancelable: true
-              });
-              chatForm.dispatchEvent(submitEvent);
+              // Invia direttamente attraverso ChatCore invece di usare il form
+              if (window.ChatCore && typeof window.ChatCore.handleMessageSubmit === 'function') {
+                window.ChatCore.handleMessageSubmit(suggestion);
+              }
             }, 10);
           } else {
             console.error('Message input or chat form not found');
@@ -173,9 +171,6 @@ const SuggestionsComponent = {
     
     console.log('Setting up welcome suggestions');
     
-    const chatForm = document.getElementById('chat-form');
-    const messageInput = document.getElementById('message-input');
-    
     // Seleziona tutti i chip di suggerimento
     const suggestionChips = welcomeMessage.querySelectorAll('.suggestion-chip');
     console.log(`Found ${suggestionChips.length} suggestion chips`);
@@ -189,16 +184,18 @@ const SuggestionsComponent = {
         const message = this.getAttribute('data-message');
         console.log('Suggestion chip clicked:', message);
         
+        const messageInput = document.getElementById('message-input');
+        const chatForm = document.getElementById('chat-form');
+        
         if (messageInput && chatForm && message) {
           messageInput.value = message;
-          // Usa un timeout per garantire che l'input abbia il valore aggiornato
+          
+          // Usa un timeout per garantire che l'input venga aggiornato prima dell'invio
           setTimeout(function() {
-            // Crea un evento submit e invialo al form
-            const submitEvent = new Event('submit', {
-              bubbles: true,
-              cancelable: true
-            });
-            chatForm.dispatchEvent(submitEvent);
+            // Invia direttamente attraverso ChatCore invece di usare il form
+            if (window.ChatCore && typeof window.ChatCore.handleMessageSubmit === 'function') {
+              window.ChatCore.handleMessageSubmit(message);
+            }
           }, 10);
         } else {
           console.error('Message input or chat form not found or no message attribute');

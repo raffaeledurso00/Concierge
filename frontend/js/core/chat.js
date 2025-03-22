@@ -27,6 +27,9 @@ const ChatCore = {
       } else {
         this.createNewChat();
       }
+
+      // Inizializza il pulsante nuova chat
+      this.setupNewChatButton();
     },
     
     /**
@@ -45,20 +48,7 @@ const ChatCore = {
       messagesContainer.innerHTML = '';
       
       // Mostra il messaggio di benvenuto
-      const welcomeMessage = document.getElementById('welcome-message');
-      if (welcomeMessage) {
-        // Clona il messaggio di benvenuto per inserirlo nel container
-        const welcomeClone = welcomeMessage.cloneNode(true);
-        welcomeClone.style.display = 'block';
-        messagesContainer.appendChild(welcomeClone);
-        
-        // Aggiungi event listener ai chip di suggerimento
-        window.SuggestionsComponent.setupWelcomeSuggestions(welcomeClone);
-      } else {
-        // Add welcome message
-        const welcomeText = "Benvenuto a Villa Petriolo! Sono il tuo concierge digitale. Posso aiutarti con informazioni sul nostro ristorante, attività disponibili o servizi della struttura. Come posso esserti utile oggi?";
-        this.addMessage(welcomeText, 'bot');
-      }
+      this.showWelcomeMessage();
       
       // Reset context
       if (window.conversationContext) {
@@ -70,7 +60,67 @@ const ChatCore = {
       this.updateTopicIndicator(null);
       
       // Chiudi la sidebar su mobile
-      window.SidebarComponent.closeSidebar();
+      if (window.innerWidth <= 768 && window.SidebarComponent) {
+        window.SidebarComponent.closeSidebar();
+      }
+    },
+    
+    /**
+     * Mostra il messaggio di benvenuto
+     */
+    showWelcomeMessage: function() {
+      const messagesContainer = document.getElementById('messages-container');
+      if (!messagesContainer) return;
+
+      // Crea il messaggio di benvenuto
+      const welcomeDiv = document.createElement('div');
+      welcomeDiv.className = 'welcome-message';
+      welcomeDiv.innerHTML = `
+        <h2>Benvenuto al Concierge Digitale di Villa Petriolo</h2>
+        <p>Sono qui per aiutarti con:</p>
+        <div class="suggestion-chips">
+          <button class="suggestion-chip" data-message="Quali sono gli orari del ristorante?">
+            <i class="fas fa-utensils"></i> Ristorante
+          </button>
+          <button class="suggestion-chip" data-message="Che attività posso fare oggi?">
+            <i class="fas fa-hiking"></i> Attività
+          </button>
+          <button class="suggestion-chip" data-message="Quali eventi sono in programma?">
+            <i class="fas fa-calendar-alt"></i> Eventi
+          </button>
+          <button class="suggestion-chip" data-message="Come posso prenotare un servizio?">
+            <i class="fas fa-concierge-bell"></i> Servizi
+          </button>
+        </div>
+      `;
+      
+      // Aggiungi il messaggio al container
+      messagesContainer.appendChild(welcomeDiv);
+      
+      // Aggiungi event listener ai chip di suggerimento
+      if (window.SuggestionsComponent) {
+        setTimeout(() => {
+          window.SuggestionsComponent.setupWelcomeSuggestions(welcomeDiv);
+        }, 100);
+      }
+
+      // Salva il messaggio di benvenuto nella chat
+      const chats = window.StorageManager.getChats();
+      const chat = chats[this.state.currentChatId] || {
+        messages: [],
+        timestamp: new Date().toISOString(),
+        title: 'Nuova conversazione'
+      };
+      
+      // Aggiungi il messaggio di benvenuto come messaggio del bot
+      chat.messages.push({
+        sender: 'bot',
+        text: "Benvenuto al Concierge Digitale di Villa Petriolo. Sono qui per aiutarti con informazioni sul ristorante, attività disponibili, eventi e servizi. Come posso esserti utile oggi?"
+      });
+      
+      // Salva la chat
+      chats[this.state.currentChatId] = chat;
+      window.StorageManager.saveChats(chats);
     },
     
     /**
@@ -305,6 +355,33 @@ const ChatCore = {
           this.state.isWaitingForResponse = false;
         }
       }, typingDelay);
+    },
+
+    /**
+     * Configura il pulsante "Nuova chat"
+     */
+    setupNewChatButton: function() {
+      const newChatBtn = document.getElementById('new-chat-btn');
+      if (!newChatBtn) {
+        console.error('New chat button not found');
+        return;
+      }
+      
+      // Rimuovi eventuali listener precedenti
+      const newBtn = newChatBtn.cloneNode(true);
+      if (newChatBtn.parentNode) {
+        newChatBtn.parentNode.replaceChild(newBtn, newChatBtn);
+      }
+      
+      // Aggiungi il nuovo listener
+      newBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('New chat button clicked directly in ChatCore');
+        this.createNewChat();
+      });
+      
+      console.log('New chat button configured in ChatCore');
     }
   };
   
