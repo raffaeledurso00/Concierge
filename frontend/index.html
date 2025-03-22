@@ -71,14 +71,17 @@
                     <span>Ospite</span>
                 </div>
             </div>
-            <!-- Assicurati che questo button sia presente e FUORI dal div sidebar-footer -->
-            <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Espandi/Riduci sidebar">
-                <i class="fas fa-chevron-left"></i>
-            </button>
         </div>
 
         <div class="chat-main">
             <div class="chat-header">
+                <!-- Pulsante toggle spostato a sinistra prima dell'hamburger menu mobile -->
+                <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Nascondi sidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
+                        <rect x="1" y="1" width="22" height="22" rx="4" ry="4" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <line x1="8" y1="1" x2="8" y2="23" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </button>
                 <div class="mobile-menu">
                     <i class="fas fa-bars" id="sidebar-toggle"></i>
                 </div>

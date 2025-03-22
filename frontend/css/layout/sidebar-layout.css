@@ -1,49 +1,42 @@
-/* layout/sidebar-layout.css */
-.sidebar-collapsed .chat-sidebar {
-    width: 60px;
+/* layout/sidebar-layout.css - versione aggiornata */
+
+/* NUOVO COMPORTAMENTO PER SIDEBAR COMPLETAMENTE NASCOSTA */
+.sidebar-hidden .chat-sidebar {
+    width: 0;
     overflow: hidden;
-}
-
-.sidebar-collapsed .sidebar-header h2,
-.sidebar-collapsed .chat-item-content,
-.sidebar-collapsed .new-chat span,
-.sidebar-collapsed .user-info span,
-.sidebar-collapsed .delete-chat-btn {
-    display: none;
-}
-
-.sidebar-collapsed .logo {
-    width: 40px;
-    margin: 0 auto;
-}
-
-.sidebar-collapsed .sidebar-header {
-    justify-content: center;
-    padding: 15px 0;
-}
-
-.sidebar-collapsed #new-chat-btn {
-    padding: 10px 0;
-    justify-content: center;
-}
-
-.sidebar-collapsed #new-chat-btn i {
+    padding: 0;
     margin: 0;
+    border: none;
+    transition: width 0.3s ease;
 }
 
-.sidebar-collapsed .sidebar-footer {
+/* Quando la sidebar è nascosta, espandi la chat principale */
+.sidebar-hidden .chat-main {
+    margin-left: 0;
+}
+
+/* Animazione fluida della transizione sidebar */
+.chat-container {
+    transition: all 0.3s ease;
+}
+
+.chat-sidebar {
+    width: 260px;
+    background-color: rgb(159, 136, 124);
+    color: white;
     display: flex;
-    justify-content: center;
-    padding: 10px 0;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    z-index: 10;
+    position: relative;
 }
 
-.sidebar-collapsed .user-info {
-    justify-content: center;
-}
-
-.sidebar-collapsed .chat-item {
-    justify-content: center;
-    padding: 10px 5px;
+.chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #121212;
+    transition: margin-left 0.3s ease;
 }
 
 .sidebar-overlay {
@@ -62,4 +55,18 @@
 .sidebar-open .sidebar-overlay {
     display: block;
     opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .chat-sidebar {
+        position: fixed;
+        left: -260px;
+        height: 100%;
+        transition: left 0.3s ease;
+    }
+    
+    .sidebar-open .chat-sidebar {
+        left: 0;
+    }
 }
