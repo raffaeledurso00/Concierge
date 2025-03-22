@@ -12,6 +12,123 @@ body {
     overflow: hidden;
 }
 /* Stili */
+/* Stili del preloader da aggiungere a style.css */
+
+/* Preloader */
+.preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #121212;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  
+  .preloader__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(0);
+  }
+  
+  .preloader__header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .preloader__logo {
+    width: 180px;
+    height: auto;
+  }
+  
+  .preloader__counter {
+    font-size: 24px;
+    color: #9f887c;
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+  
+  .preloader__circle {
+    width: 152px;
+    height: 152px;
+    position: relative;
+  }
+  
+  .preloader__circle svg {
+    width: 100%;
+    height: 100%;
+    transform-origin: center center;
+  }
+  
+  /* Tenda di transizione */
+  .curtain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9998;
+    pointer-events: none;
+    display: none;
+  }
+  
+  .curtain-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .curtain__rect {
+    fill: #9f887c;
+  }
+  
+  /* Cursore personalizzato */
+  .cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    pointer-events: none;
+    will-change: transform;
+    opacity: 0;
+    mix-blend-mode: difference;
+  }
+  
+  .cursor__follower {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    transform: translate(-50%, -50%);
+  }
+  
+  .cursor__follower svg {
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Aggiungi una classe per il body quando il preloader è attivo */
+  body.cursor-progress {
+    cursor: progress;
+  }
+  
+  /* Nasconde il contenuto durante il caricamento */
+  .page-wrapper__content {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .page-wrapper__content.loaded {
+    opacity: 1;
+  }
 /* Stili per le liste formattate - da aggiungere a style.css */
 
 /* Stili generali per sezioni formattate */

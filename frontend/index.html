@@ -10,6 +10,40 @@
     <meta name="theme-color" content="#9f887c">
 </head>
 <body>
+    <!-- Preloader da aggiungere all'interno del tag <body> prima del div .chat-container -->
+<div id="js-preloader" class="preloader">
+    <div class="preloader__content">
+      <div class="preloader__header">
+        <img src="img/logo.png" alt="Villa Petriolo" class="preloader__logo">
+      </div>
+      <div class="preloader__counter">
+        <span class="preloader__counter-current">0</span>
+      </div>
+      <div class="preloader__circle">
+        <svg viewBox="0 0 152 152" version="1.1" xmlns="http://www.w3.org/2000/svg">
+          <circle id="inner" cx="76" cy="76" r="60" stroke="#9f887c" fill="none" stroke-width="2" stroke-dasharray="376.8" stroke-dashoffset="0" />
+          <circle id="outer" cx="76" cy="76" r="70" stroke="#9f887c" fill="none" stroke-width="2" stroke-dasharray="439.6" stroke-dashoffset="0" />
+        </svg>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Aggiungi dopo il preloader -->
+  <div id="js-page-transition-curtain" class="curtain">
+    <svg class="curtain-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <path class="curtain__rect" d="M0,0 L100,0 L100,100 L0,100 L0,0 Z" />
+    </svg>
+  </div>
+  
+  <!-- Cursor follower da aggiungere prima della chiusura del tag body -->
+  <div id="js-cursor" class="cursor">
+    <div class="cursor__follower">
+      <svg viewBox="0 0 152 152" version="1.1" xmlns="http://www.w3.org/2000/svg">
+        <circle id="inner" cx="76" cy="76" r="6" fill="#9f887c" />
+        <circle id="outer" cx="76" cy="76" r="12" stroke="#9f887c" fill="none" stroke-width="2" />
+      </svg>
+    </div>
+  </div>
     <div class="chat-container">
         <div class="chat-sidebar">
             <div class="sidebar-header">

@@ -27,7 +27,100 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ===== CORE FUNCTIONS =====
+    //preolader
+    // Codice da aggiungere all'inizio di script.js o in un nuovo file da includere prima di script.js
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Preloader initialization');
     
+    // Nascondi il contenitore principale durante il caricamento
+    document.querySelector('.chat-container').style.opacity = 0;
+    
+    // Carica GSAP da CDN se non è già disponibile
+    function loadGSAP() {
+      return new Promise((resolve) => {
+        if (window.gsap) {
+          resolve();
+          return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
+        script.onload = () => {
+          // Carica anche i plugin necessari
+          const drawSVGScript = document.createElement('script');
+          drawSVGScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/DrawSVGPlugin.min.js';
+          drawSVGScript.onload = resolve;
+          document.head.appendChild(drawSVGScript);
+        };
+        document.head.appendChild(script);
+      });
+    }
+    
+    // Inizializza il preloader
+    async function initializePreloader() {
+      // Assicurati che GSAP sia caricato
+      await loadGSAP();
+      
+      // Crea l'istanza del preloader
+      window.PagePreloader = new Preloader({
+        scope: document,
+        target: document.getElementById('js-preloader'),
+        curtain: {
+          element: document.getElementById('js-page-transition-curtain'),
+          background: '#9f887c'
+        },
+        cursor: {
+          element: document.getElementById('js-cursor'),
+          offset: {
+            top: 0,
+            left: 0
+          }
+        },
+        counter: {
+          easing: 'power4.out',
+          duration: 20,
+          start: 0,
+          target: 100,
+          prefix: '',
+          suffix: ''
+        }
+      });
+      
+      // Avvia il preloader
+      window.PagePreloader.start();
+      
+      // Simula il caricamento degli assets
+      setTimeout(() => {
+        // Completa il preloader e mostra il contenuto principale
+        window.PagePreloader.finish().then(() => {
+          // Evento per segnalare che il preloader è completato
+          console.log('Preloader completed');
+          
+          // Mostra il contenitore principale con un'animazione
+          gsap.to('.chat-container', {
+            opacity: 1,
+            duration: 0.5,
+            ease: 'power2.inOut'
+          });
+          
+          // Piccola animazione per il logo nell'header
+          const headerLogo = document.querySelector('.chat-header-logo');
+          if (headerLogo) {
+            gsap.from(headerLogo, {
+              scale: 1.2,
+              opacity: 0,
+              duration: 0.5,
+              ease: 'back.out(1.7)'
+            });
+          }
+        });
+      }, 2500); // Attendi 2.5 secondi prima di completare il preloader
+    }
+    
+    // Avvia l'inizializzazione
+    initializePreloader();
+  });
     // Get all chats
     function getChats() {
         try {
@@ -492,6 +585,9 @@ function addQuickSuggestionsToMessage(messageRow, text) {
         }
     }
     
+    
+    
+
     // ===== EVENT LISTENERS =====
     
     // Form submission
