@@ -57,7 +57,7 @@
                 <img src="img/logo.png" alt="Villa Petriolo" class="logo">
             </div>
             <div class="new-chat">
-                <button id="new-chat-btn" onclick="(function(e){e.stopPropagation(); window.createNewChatAndClose();})(event)">
+                <button id="new-chat-btn">
                     <i class="fas fa-plus"></i> Nuova chat
                 </button>
             </div>
@@ -238,5 +238,33 @@
         }
     });
     </script>
+    <script>
+        // Fix specifico per il form di chat
+        document.addEventListener('DOMContentLoaded', function() {
+          const fixChatForm = function() {
+            const form = document.getElementById('chat-form');
+            if (!form) return;
+            
+            form.addEventListener('submit', function(e) {
+              console.log('Emergency submit prevention');
+              e.preventDefault();
+              e.stopPropagation();
+              
+              const input = document.getElementById('message-input');
+              if (input && input.value.trim() !== '') {
+                if (window.ChatCore && typeof window.ChatCore.handleMessageSubmit === 'function') {
+                  window.ChatCore.handleMessageSubmit(input.value.trim());
+                }
+              }
+              
+              return false;
+            }, true);
+          };
+          
+          // Esegui immediatamente e anche dopo il caricamento dell'app
+          fixChatForm();
+          document.addEventListener('appReady', fixChatForm);
+        });
+      </script>
 </body>
 </html>

@@ -23,26 +23,38 @@ const EventsManager = {
       return;
     }
     
-    // Rimuovi event listener esistenti
-    const newChatForm = chatForm.cloneNode(true);
-    chatForm.parentNode.replaceChild(newChatForm, chatForm);
+    // Rimuovi tutti gli event listener esistenti
+    const oldChatForm = chatForm;
+    const newChatForm = oldChatForm.cloneNode(true);
+    oldChatForm.parentNode.replaceChild(newChatForm, oldChatForm);
     
-    newChatForm.addEventListener('submit', (e) => {
+    // Aggiungi l'event listener con capture = true per garantire che catturi l'evento prima di tutto
+    newChatForm.addEventListener('submit', function(e) {
+      console.log('Form submit intercepted');
+      // Previene sia la propagazione che il comportamento predefinito
+      e.stopPropagation();
       e.preventDefault();
       
       const messageInput = document.getElementById('message-input');
       if (!messageInput) return;
       
       const userMessage = messageInput.value.trim();
-      if (userMessage !== '') {
-        // Invia il messaggio attraverso il ChatCore
-        if (typeof window.ChatCore.handleMessageSubmit === 'function') {
-          window.ChatCore.handleMessageSubmit(userMessage);
-        }
+      if (userMessage === '') return;
+      
+      console.log('Processing message:', userMessage);
+      
+      // Invia il messaggio attraverso il ChatCore
+      if (typeof window.ChatCore === 'object' && typeof window.ChatCore.handleMessageSubmit === 'function') {
+        window.ChatCore.handleMessageSubmit(userMessage);
+      } else {
+        console.error('ChatCore not available or handleMessageSubmit method not found');
       }
-    });
+      
+      // Ritorna false per sicurezza aggiuntiva per impedire il submit del form
+      return false;
+    }, true); // Il true alla fine indica la fase di capturing
     
-    console.log('Chat form event listener set up');
+    console.log('Chat form event listener set up with capturing');
   },
   
   /**
@@ -61,41 +73,30 @@ const EventsManager = {
       newChatBtn.parentNode.replaceChild(newChatBtnClone, newChatBtn);
     }
     
-    // Aggiungi il nuovo listener direttamente senza onclick nell'HTML
+    // Aggiungi il nuovo listener direttamente
     newChatBtnClone.addEventListener('click', function(e) {
       // Ferma la propagazione dell'evento per evitare che raggiunga l'overlay
       e.stopPropagation();
       
-      console.log('New chat button clicked with fixed handler');
+      console.log('New chat button clicked');
       
       // Crea una nuova chat tramite ChatCore
-      if (typeof window.ChatCore.createNewChat === 'function') {
+      if (typeof window.ChatCore === 'object' && typeof window.ChatCore.createNewChat === 'function') {
         window.ChatCore.createNewChat();
+      } else {
+        console.error('ChatCore not available or createNewChat method not found');
       }
       
       // Chiudi la sidebar dopo aver creato la chat (solo su mobile)
       if (window.innerWidth <= 768) {
-        window.SidebarComponent.closeSidebar();
+        if (typeof window.SidebarComponent === 'object' && typeof window.SidebarComponent.closeSidebar === 'function') {
+          window.SidebarComponent.closeSidebar();
+        }
       }
     });
     
-    // Funzione globale per creare nuove chat (più sicura)
-    window.createNewChatAndClose = function() {
-      console.log('createNewChatAndClose called');
-      // Evita di eseguire doppi click
-      if (window.isCreatingChat) return;
-      window.isCreatingChat = true;
-      
-      // Crea una nuova chat tramite ChatCore
-      if (typeof window.ChatCore.createNewChat === 'function') {
-        window.ChatCore.createNewChat();
-      }
-      
-      // Reset del flag
-      setTimeout(function() {
-        window.isCreatingChat = false;
-      }, 500);
-    };
+    // Rimuoviamo l'attributo onclick dall'HTML che può causare conflitti
+    newChatBtnClone.removeAttribute('onclick');
     
     console.log('New chat button event listener set up');
   },
@@ -139,10 +140,12 @@ const EventsManager = {
       }
       
       // Reinizializza i suggerimenti welcome
-      const welcomeMessage = document.querySelector('.welcome-message');
-      if (welcomeMessage && window.SuggestionsComponent) {
-        window.SuggestionsComponent.setupWelcomeSuggestions(welcomeMessage);
-      }
+      setTimeout(function() {
+        const welcomeMessage = document.querySelector('.welcome-message');
+        if (welcomeMessage && window.SuggestionsComponent) {
+          window.SuggestionsComponent.setupWelcomeSuggestions(welcomeMessage);
+        }
+      }, 100);
       
       console.log('All components initialized after appReady');
     });

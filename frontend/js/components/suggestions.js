@@ -41,19 +41,22 @@ const SuggestionsComponent = {
         const suggestionBtn = document.createElement('button');
         suggestionBtn.className = 'quick-suggestion';
         suggestionBtn.textContent = suggestion;
-        suggestionBtn.addEventListener('click', () => {
+        suggestionBtn.addEventListener('click', function() {
           console.log('Suggestion clicked:', suggestion);
           // Inserisci il suggerimento nell'input e invia
           const messageInput = document.getElementById('message-input');
           const chatForm = document.getElementById('chat-form');
           if (messageInput && chatForm) {
             messageInput.value = suggestion;
-            // Utilizza Event constructor per compatibilità massima
-            const submitEvent = new Event('submit', {
-              bubbles: true,
-              cancelable: true
-            });
-            chatForm.dispatchEvent(submitEvent);
+            // Usa un timeout per garantire che l'input abbia il valore aggiornato
+            setTimeout(function() {
+              // Utilizza Event constructor per compatibilità massima
+              const submitEvent = new Event('submit', {
+                bubbles: true,
+                cancelable: true
+              });
+              chatForm.dispatchEvent(submitEvent);
+            }, 10);
           } else {
             console.error('Message input or chat form not found');
           }
@@ -186,16 +189,19 @@ const SuggestionsComponent = {
         const message = this.getAttribute('data-message');
         console.log('Suggestion chip clicked:', message);
         
-        if (messageInput && chatForm) {
+        if (messageInput && chatForm && message) {
           messageInput.value = message;
-          // Usa createEvent per massima compatibilità
-          const submitEvent = new Event('submit', {
-            bubbles: true,
-            cancelable: true
-          });
-          chatForm.dispatchEvent(submitEvent);
+          // Usa un timeout per garantire che l'input abbia il valore aggiornato
+          setTimeout(function() {
+            // Crea un evento submit e invialo al form
+            const submitEvent = new Event('submit', {
+              bubbles: true,
+              cancelable: true
+            });
+            chatForm.dispatchEvent(submitEvent);
+          }, 10);
         } else {
-          console.error('Message input or chat form not found');
+          console.error('Message input or chat form not found or no message attribute');
         }
       });
     });
