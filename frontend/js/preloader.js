@@ -1,8 +1,7 @@
 /**
- * preloader.js - Gestisce l'animazione di caricamento iniziale
+ * preloader.js - Gestisce l'animazione di caricamento iniziale con cerchio rotante
  */
 
-// Attendi che il DOM sia completamente caricato
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Preloader initialization');
     
@@ -15,28 +14,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Riferimenti elementi DOM
     const preloader = document.getElementById('js-preloader');
-    const counter = document.querySelector('.preloader__counter-current');
-    const curtain = document.getElementById('js-page-transition-curtain');
-    const cursor = document.getElementById('js-cursor');
+    const loadingCircle = document.getElementById('loading-circle');
+    const preloaderLogo = document.getElementById('preloader-logo');
+    const chatHeaderLogo = document.querySelector('.chat-header-logo');
     const chatContainer = document.querySelector('.chat-container');
-    const innerCircle = document.querySelector('#js-preloader .preloader__circle #inner');
-    const outerCircle = document.querySelector('#js-preloader .preloader__circle #outer');
     
     // Verifica che tutti gli elementi necessari esistano
-    if (!preloader || !counter || !curtain || !chatContainer) {
+    if (!preloader || !loadingCircle || !preloaderLogo || !chatContainer) {
         console.error('Elementi DOM mancanti. Il preloader non funzionerà correttamente.');
         hidePreloader();
         return;
     }
-    
-    console.log('Elementi preloader trovati:', {
-        preloader: !!preloader,
-        counter: !!counter,
-        curtain: !!curtain,
-        chatContainer: !!chatContainer,
-        innerCircle: !!innerCircle,
-        outerCircle: !!outerCircle
-    });
     
     // Nascondi la chat container durante il preloader
     chatContainer.style.opacity = '0';
@@ -44,58 +32,116 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inizia l'animazione del preloader
     const timeline = gsap.timeline();
     
-    // Aggiunge la classe per il cursore di caricamento
-    document.body.classList.add('cursor-progress');
-    
-    // Animazione dei cerchi SVG
-    if (innerCircle && outerCircle && gsap.getProperty) {
-        try {
-            // Verifica se il plugin DrawSVG è disponibile
-            if (innerCircle.drawSVG || gsap.plugins.drawSVG) {
-                timeline.to(outerCircle, {
-                    drawSVG: '0% 100%',
-                    duration: 3,
-                    ease: 'power4.out'
-                }, 'start');
-            } else {
-                console.warn('Plugin DrawSVG non disponibile, utilizzo animazione alternativa');
-                // Fallback se DrawSVG non è disponibile
-                timeline.to(outerCircle, {
-                    strokeDashoffset: 0,
-                    duration: 3,
-                    ease: 'power4.out'
-                }, 'start');
-            }
-        } catch (e) {
-            console.error('Errore nell\'animazione del cerchio:', e);
+    // Animazione del cerchio di caricamento
+    timeline.fromTo(loadingCircle, 
+        { strokeDashoffset: 565.48 },
+        { 
+            strokeDashoffset: 0, 
+            duration: 2.5, 
+            ease: "power2.inOut",
+            rotation: 360,
+            transformOrigin: "center center",
+            onComplete: finishPreloader
         }
+    );
+    
+    // Aggiunge un'animazione di pulsazione al logo
+    gsap.to(preloaderLogo, {
+        scale: 1.05,
+        duration: 1,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut"
+    });
+    
+// Funzione per completare l'animazione del preloader
+function finishPreloader() {
+    // Correggiamo il riferimento al logo nell'header
+    const chatHeaderLogo = document.querySelector('.chat-header img'); // Modifichiamo questo selettore
+    
+    // Ottieni la posizione e le dimensioni
+    const headerBounds = chatHeaderLogo ? chatHeaderLogo.getBoundingClientRect() : null;
+    const preloaderLogoBounds = preloaderLogo.getBoundingClientRect();
+    
+    if (!headerBounds) {
+        console.warn('Header logo not found, using fallback position');
+        // Se non troviamo il logo nell'header, usiamo il centro dell'header
+        const chatHeader = document.querySelector('.chat-header');
+        if (chatHeader) {
+            const headerBounds = chatHeader.getBoundingClientRect();
+            // Calcola il centro dell'header
+            const centerX = headerBounds.left + (headerBounds.width / 2);
+            const centerY = headerBounds.top + (headerBounds.height / 2);
+            
+            // Calcola l'offset necessario
+            const offsetX = centerX - (preloaderLogoBounds.left + preloaderLogoBounds.width / 2);
+            const offsetY = centerY - (preloaderLogoBounds.top + preloaderLogoBounds.height / 2);
+            
+            // Aggiungi classe per abilitare la transizione
+            preloaderLogo.classList.add('transitioning');
+            
+            // Anima il logo verso il centro dell'header
+            gsap.to(preloaderLogo, {
+                x: offsetX,
+                y: offsetY,
+                scale: 0.4, // Ridimensionamento adeguato per il logo nell'header
+                duration: 0.8,
+                ease: "power3.inOut",
+                onComplete: completeTransition
+            });
+        } else {
+            // Fallback se non troviamo nemmeno l'header
+            fadeOutPreloader();
+        }
+    } else {
+        // Se troviamo il logo nell'header, animiamo verso di esso
+        const scaleX = headerBounds.width / preloaderLogoBounds.width;
+        const scaleY = headerBounds.height / preloaderLogoBounds.height;
+        const scale = Math.min(scaleX, scaleY);
+        
+        const offsetX = headerBounds.left + (headerBounds.width / 2) - (preloaderLogoBounds.left + preloaderLogoBounds.width / 2);
+        const offsetY = headerBounds.top + (headerBounds.height / 2) - (preloaderLogoBounds.top + preloaderLogoBounds.height / 2);
+        
+        // Aggiungi classe per abilitare la transizione
+        preloaderLogo.classList.add('transitioning');
+        
+        // Anima il logo verso la sua posizione nell'header
+        gsap.to(preloaderLogo, {
+            x: offsetX,
+            y: offsetY,
+            scale: scale,
+            duration: 0.8,
+            ease: "power3.inOut",
+            onComplete: completeTransition
+        });
     }
     
-    // Animazione contatore
-    timeline.to({ value: 0 }, {
-        value: 100,
-        duration: 3,
-        ease: 'power4.out',
-        onUpdate: function() {
-            counter.textContent = Math.round(this.targets()[0].value);
-        }
-    }, 'start');
+    // Fade out del cerchio di caricamento
+    gsap.to(loadingCircle, {
+        opacity: 0,
+        duration: 0.6
+    });
     
-    // Dopo 3.5 secondi, completa l'animazione e mostra l'app
-    setTimeout(function() {
-        finishPreloader();
-    }, 3500);
+    // Fade out dello sfondo del preloader
+    gsap.to(preloader, {
+        backgroundColor: 'rgba(18, 18, 18, 0)',
+        duration: 0.8
+    });
     
-    // Funzione per completare l'animazione del preloader
-    function finishPreloader() {
-        const completeTimeline = gsap.timeline({
+    // Completa la transizione e inizializza l'app
+    function completeTransition() {
+        // Nascondi il preloader
+        preloader.style.display = 'none';
+        
+        // Mostra la chat container
+        gsap.to(chatContainer, {
+            opacity: 1,
+            duration: 0.4,
             onComplete: function() {
-                // Nascondi completamente il preloader
-                preloader.style.display = 'none';
-                curtain.style.display = 'none';
-                
-                // Rimuovi la classe del cursore
-                document.body.classList.remove('cursor-progress');
+                // Rimuovi il logo di transizione
+                if (preloaderLogo.parentNode) {
+                    preloaderLogo.parentNode.removeChild(preloaderLogo);
+                }
                 
                 // Inizializza l'app principale
                 if (typeof window.initializeApp === 'function') {
@@ -108,59 +154,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
-        
-        // Completa l'animazione del contatore
-        completeTimeline.to({}, {
-            duration: 0.3,
-            onUpdate: function() {
-                counter.textContent = '100';
-            }
-        }, 'finish');
-        
-        // Mostra la tenda di transizione
-        completeTimeline.set(curtain, {
-            display: 'block',
-            autoAlpha: 0
-        }).to(curtain, {
-            autoAlpha: 1,
-            duration: 0.5
-        }, 'finish+=0.2');
-        
-        // Nascondi il preloader
-        completeTimeline.to(preloader, {
-            autoAlpha: 0,
-            duration: 0.6,
-            ease: 'power3.inOut'
-        }, 'finish+=0.4');
-        
-        // Mostra la chat container
-        completeTimeline.to(chatContainer, {
-            opacity: 1,
-            duration: 0.5,
-            ease: 'power2.inOut'
-        }, 'finish+=0.6');
-        
-        // Nascondi la tenda
-        completeTimeline.to(curtain, {
-            autoAlpha: 0,
-            duration: 0.5
-        }, 'finish+=0.9');
     }
     
-    // Funzione di fallback per nascondere il preloader in caso di errori
-    function hidePreloader() {
-        if (preloader) preloader.style.display = 'none';
-        if (chatContainer) chatContainer.style.opacity = '1';
-        
-        // Inizializza l'app
-        if (typeof window.initializeApp === 'function') {
-            window.initializeApp();
-        } else {
-            // Fallback: invia un evento che l'app è pronta
-            const event = new Event('appReady');
-            document.dispatchEvent(event);
-        }
+    // Fallback in caso di problemi
+    function fadeOutPreloader() {
+        gsap.to(preloader, {
+            autoAlpha: 0,
+            duration: 0.8,
+            onComplete: function() {
+                preloader.style.display = 'none';
+                chatContainer.style.opacity = '1';
+                
+                // Inizializza l'app
+                if (typeof window.initializeApp === 'function') {
+                    window.initializeApp();
+                } else {
+                    const event = new Event('appReady');
+                    document.dispatchEvent(event);
+                }
+            }
+        });
     }
+}
     
     // Gestione degli errori: se qualcosa va storto, nascondi il preloader dopo 5 secondi
     setTimeout(function() {

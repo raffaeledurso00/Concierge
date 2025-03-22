@@ -15,6 +15,7 @@ body {
 /* Stili del preloader da aggiungere a style.css */
 
 /* Preloader */
+/* Preloader */
 .preloader {
     position: fixed;
     top: 0;
@@ -26,46 +27,57 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
-  }
-  
-  .preloader__content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transform: translateY(0);
-  }
-  
-  .preloader__header {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-  
-  .preloader__logo {
-    width: 180px;
-    height: auto;
-  }
-  
-  .preloader__counter {
-    font-size: 24px;
-    color: #9f887c;
-    text-align: center;
-    margin-bottom: 20px;
-    font-weight: 500;
-  }
-  
-  .preloader__circle {
-    width: 152px;
-    height: 152px;
+}
+
+.preloader__content {
     position: relative;
-  }
-  
-  .preloader__circle svg {
+    width: 200px;
+    height: 200px;
+}
+
+.preloader__circle {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.preloader__circle svg {
     width: 100%;
     height: 100%;
     transform-origin: center center;
-  }
+}
+
+#loading-circle {
+    stroke-dasharray: 565.48; /* 2 * PI * 90 (circonferenza del cerchio) */
+    stroke-dashoffset: 565.48;
+    stroke: #9f887c;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 3px rgba(159, 136, 124, 0.7));
+}
+
+.preloader__logo-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.preloader__logo {
+    width: 100%;
+    height: auto;
+}
+
+/* Aggiungiamo una classe per l'animazione di transizione del logo */
+.preloader__logo.transitioning {
+    position: fixed;
+    z-index: 10000;
+    transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
   
   /* Tenda di transizione */
   .curtain {
