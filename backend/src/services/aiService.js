@@ -426,36 +426,56 @@ class AIService {
         return this.SIMPLE_RESPONSES[lowerMessage] || null;
     }
     
-    /**
-     * Rende le risposte più naturali
-     * @param {string} response - La risposta originale
-     * @param {string} topic - L'argomento della conversazione
-     * @returns {string} - La risposta naturalizzata
-     */
-    naturalizeResponse(response, topic) {
-        // Evita risposte troppo formali o rigide
-        let naturalResponse = response;
-        naturalResponse = naturalResponse.replace(/Mi permetta di informarla/g, "Posso dirle");
-        naturalResponse = naturalResponse.replace(/Non esiti a contattarci/g, "Non esiti a chiedere");
-        naturalResponse = naturalResponse.replace(/Desidero informarla/g, "Le faccio sapere");
-        
-        // Aggiungi espressioni toscane occasionali per dare carattere
-        if (Math.random() > 0.8) {
-            const randomExpression = this.TOSCANA_EXPRESSIONS[Math.floor(Math.random() * this.TOSCANA_EXPRESSIONS.length)];
-            naturalResponse += " " + randomExpression;
-        }
-        
-        // Aggiungi variazione nelle chiusure delle risposte
-        const randomClosing = this.RESPONSE_CLOSINGS[Math.floor(Math.random() * this.RESPONSE_CLOSINGS.length)];
-        
-        // Se la risposta non termina già con una domanda, aggiungine una
-        if (!naturalResponse.trim().endsWith("?")) {
-            naturalResponse += " " + randomClosing;
-        }
-        
-        return naturalResponse;
+/**
+ * Rende le risposte più naturali e pulisce il testo da caratteri problematici
+ * @param {string} response - La risposta originale
+ * @param {string} topic - L'argomento della conversazione
+ * @returns {string} - La risposta naturalizzata
+ */
+naturalizeResponse(response, topic) {
+    // Pulisci le parentesi vuote e altri caratteri problematici
+    let naturalResponse = response;
+    naturalResponse = naturalResponse.replace(/\(\s*\)/g, '');  // Rimuovi parentesi vuote
+    naturalResponse = naturalResponse.replace(/\s{2,}/g, ' ');  // Riduci spazi multipli a uno solo
+    
+    // Sistema problemi comuni con la punteggiatura
+    naturalResponse = naturalResponse.replace(/\,\s*\,/g, ',');  // Rimuovi virgole doppie
+    naturalResponse = naturalResponse.replace(/\.\s*\./g, '.');  // Rimuovi punti doppi
+    
+    // Evita risposte troppo formali o rigide
+    naturalResponse = naturalResponse.replace(/Mi permetta di informarla/g, "Posso dirle");
+    naturalResponse = naturalResponse.replace(/Non esiti a contattarci/g, "Non esiti a chiedere");
+    naturalResponse = naturalResponse.replace(/Desidero informarla/g, "Le faccio sapere");
+    
+    // Sistema i nomi delle sezioni per assicurare la formattazione corretta
+    naturalResponse = naturalResponse.replace(/ANTIPASTI\s*:/g, "ANTIPASTI:");
+    naturalResponse = naturalResponse.replace(/PRIMI\s*:/g, "PRIMI:");
+    naturalResponse = naturalResponse.replace(/SECONDI\s*:/g, "SECONDI:");
+    naturalResponse = naturalResponse.replace(/DOLCI\s*:/g, "DOLCI:");
+    naturalResponse = naturalResponse.replace(/INTERNE\s*:/g, "INTERNE:");
+    naturalResponse = naturalResponse.replace(/ESTERNE\s*:/g, "ESTERNE:");
+    naturalResponse = naturalResponse.replace(/ESCURSIONI\s*:/g, "ESCURSIONI:");
+    
+    // Controlla che i prezzi siano formattati correttamente
+    naturalResponse = naturalResponse.replace(/(\d+)\s*euro/gi, '€$1');
+    naturalResponse = naturalResponse.replace(/€\s+(\d+)/g, '€$1');
+    
+    // Aggiungi espressioni toscane occasionali per dare carattere
+    if (Math.random() > 0.9) {
+        const randomExpression = this.TOSCANA_EXPRESSIONS[Math.floor(Math.random() * this.TOSCANA_EXPRESSIONS.length)];
+        naturalResponse += " " + randomExpression;
     }
     
+    // Aggiungi variazione nelle chiusure delle risposte
+    const randomClosing = this.RESPONSE_CLOSINGS[Math.floor(Math.random() * this.RESPONSE_CLOSINGS.length)];
+    
+    // Se la risposta non termina già con una domanda, aggiungine una
+    if (!naturalResponse.trim().endsWith("?")) {
+        naturalResponse += " " + randomClosing;
+    }
+    
+    return naturalResponse;
+}
     /**
      * Genera un prompt ottimizzato per il modello LLM
      * @param {string} message - Il messaggio dell'utente
