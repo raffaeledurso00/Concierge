@@ -122,43 +122,178 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('Applicando fix semplice per prevenire crash');
       
       // Fix per i pulsanti di eliminazione chat
-      const fixDeleteButtons = function() {
-          const deleteButtons = document.querySelectorAll('.delete-chat-btn');
-          deleteButtons.forEach(btn => {
-              // Rimuovi eventuali handler esistenti
-              const newBtn = btn.cloneNode(true);
-              if (btn.parentNode) {
-                  btn.parentNode.replaceChild(newBtn, btn);
-              }
-              
-              // Aggiungi un handler semplice e diretto
-              newBtn.onclick = function(e) {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  
-                  const chatId = this.getAttribute('data-id');
-                  if (!chatId) return;
-                  
-                  if (confirm('Sei sicuro di voler eliminare questa chat?')) {
-                      try {
-                          // Prova ad usare ChatCore
-                          if (window.ChatCore && window.ChatCore.deleteChat) {
-                              window.ChatCore.deleteChat(chatId);
-                          } else {
-                              // Fallback diretto
-                              const chats = JSON.parse(localStorage.getItem('villa_petriolo_chats') || '{}');
-                              delete chats[chatId];
-                              localStorage.setItem('villa_petriolo_chats', JSON.stringify(chats));
-                              window.location.reload();
-                          }
-                      } catch (err) {
-                          console.error(err);
-                          alert('Errore durante l\'eliminazione. Ricarica la pagina e riprova.');
-                      }
-                  }
-              };
-          });
-      };
+// Fix completamente riscritto per i pulsanti di eliminazione chat
+const fixDeleteButtons = function() {
+    console.log('Installing robust delete button handler');
+    
+    // Rimuovi qualsiasi listener esistente
+    document.removeEventListener('click', window._deleteButtonHandler);
+    
+    // Definisci una nuova funzione handler e salvala globalmente per poterla rimuovere dopo
+    window._deleteButtonHandler = function(e) {
+      // Cerca il pulsante delete o l'icona del cestino
+      let target = e.target;
+      let foundDeleteElement = false;
+      
+      // Controlla se l'elemento è un pulsante delete o un'icona del cestino
+      if (target.classList && (
+          target.classList.contains('delete-chat-btn') || 
+          target.classList.contains('fa-trash')
+      )) {
+        foundDeleteElement = true;
+      }
+      
+      // Se non abbiamo trovato direttamente, cerca nei genitori (per l'icona dentro il bottone)
+      if (!foundDeleteElement) {
+        // Cerca nei genitori fino a 3 livelli
+        for (let i = 0; i < 3 && target; i++) {
+          target = target.parentElement;
+          if (target && target.classList && (
+              target.classList.contains('delete-chat-btn') || 
+              target.classList.contains('fa-trash')
+          )) {
+            foundDeleteElement = true;
+            break;
+          }
+        }
+      }
+      
+      // Se ancora non abbiamo trovato, esci
+      if (!foundDeleteElement) return;
+      
+      // A questo punto, se abbiamo trovato l'icona, dobbiamo assicurarci di avere il pulsante
+      if (target.classList.contains('fa-trash')) {
+        // Risali fino al pulsante
+        while (target && !target.classList.contains('delete-chat-btn')) {
+          target = target.parentElement;
+        }
+        
+        // Se non troviamo il pulsante, esci
+        if (!target) return;
+      }
+      
+      // Abbiamo trovato il pulsante delete, fermia la propagazione e previeni l'azione di default
+      e.stopPropagation();
+      e.preventDefault();
+      
+      // Ottieni l'ID della chat
+      let chatId = target.getAttribute('data-id');
+      console.log('Delete button clicked for chat ID:', chatId);
+      
+      // Se non c'è un ID o è vuoto, esci
+      if (!chatId) {
+        console.error('No chat ID found');
+        return;
+      }
+      
+      // Chiedi conferma
+      if (!confirm('Sei sicuro di voler eliminare questa chat?')) {
+        console.log('Deletion cancelled by user');
+        return;
+      }
+      
+      console.log('Deleting chat with ID:', chatId);
+      
+      try {
+        // Implementazione diretta e semplice usando localStorage
+        // 1. Ottieni le chat dal localStorage
+        const storedChats = localStorage.getItem('villa_petriolo_chats');
+        if (!storedChats) {
+          console.error('No chats found in localStorage');
+          return;
+        }
+        
+        // 2. Converti da JSON a oggetto
+        const chats = JSON.parse(storedChats);
+        
+        // 3. Verifica che la chat esista
+        if (!chats[chatId]) {
+          console.error('Chat not found in storage:', chatId);
+          return;
+        }
+        
+        // 4. Salva l'ID della chat corrente
+        const currentChatId = window.ChatCore?.state?.currentChatId;
+        console.log('Current chat ID:', currentChatId);
+        
+        // 5. Elimina la chat
+        delete chats[chatId];
+        console.log('Chat removed from object');
+        
+        // 6. Salva l'oggetto aggiornato nel localStorage
+        localStorage.setItem('villa_petriolo_chats', JSON.stringify(chats));
+        console.log('Updated chats saved to localStorage');
+        
+        // 7. Gestisci l'UI
+        if (chatId === currentChatId) {
+          // Era la chat attiva, dobbiamo creare una nuova chat o caricarne un'altra
+          const remainingChatIds = Object.keys(chats);
+          console.log('Remaining chat IDs:', remainingChatIds);
+          
+          if (remainingChatIds.length > 0) {
+            // Ci sono ancora chat disponibili, carica la prima
+            console.log('Loading first available chat');
+            if (window.ChatCore?.loadChat) {
+              window.ChatCore.loadChat(remainingChatIds[0]);
+            } else {
+              // Non possiamo caricare, ricarica la pagina
+              console.log('ChatCore.loadChat not available, reloading page');
+              window.location.reload();
+            }
+          } else {
+            // Non ci sono più chat, crea una nuova chat
+            console.log('No chats left, creating new chat');
+            if (window.ChatCore?.createNewChat) {
+              window.ChatCore.createNewChat();
+            } else {
+              // Non possiamo creare una nuova chat, ricarica la pagina
+              console.log('ChatCore.createNewChat not available, reloading page');
+              window.location.reload();
+            }
+          }
+        } else {
+          // Non era la chat attiva, aggiorna solo la sidebar
+          console.log('Updating sidebar with current chat ID:', currentChatId);
+          if (window.SidebarComponent?.updateChatList) {
+            window.SidebarComponent.updateChatList(currentChatId);
+          } else {
+            // Non possiamo aggiornare la sidebar, ricarica la pagina
+            console.log('SidebarComponent.updateChatList not available, reloading page');
+            window.location.reload();
+          }
+        }
+        
+        // Come fallback, forza un aggiornamento della pagina dopo 500ms se sembra che nulla sia cambiato
+        setTimeout(() => {
+          // Controlla se la chat è ancora presente nella sidebar
+          const chatElement = document.querySelector(`.chat-item-content[data-id="${chatId}"]`);
+          if (chatElement) {
+            console.log('Chat still in sidebar, forcing reload');
+            window.location.reload();
+          }
+        }, 500);
+        
+        console.log('Deletion process completed successfully');
+      } catch (error) {
+        console.error('Error during chat deletion:', error);
+        alert('Si è verificato un errore durante l\'eliminazione della chat. La pagina verrà ricaricata.');
+        window.location.reload();
+      }
+    };
+    
+    // Aggiungi il listener
+    document.addEventListener('click', window._deleteButtonHandler);
+    
+    console.log('Robust delete button handler installed successfully');
+  };
+  
+  // Esegui subito e ricorsivamente
+  (function ensureDeleteButtonsWork() {
+    fixDeleteButtons();
+    
+    // Ricorsivamente controlla ogni 2 secondi per assicurarsi che i button funzionino
+    setTimeout(ensureDeleteButtonsWork, 2000);
+  })();
       
       // Fix per il form di chat
       const chatForm = document.getElementById('chat-form');

@@ -7,15 +7,17 @@ const SidebarComponent = {
    * @param {string} currentChatId - ID della chat attualmente attiva
    */
   updateChatList: function(currentChatId) {
-    console.log('Updating chat list, current chat ID:', currentChatId);
+    console.log('DEBUG: Updating chat list, current chat ID:', currentChatId);
     
     const sidebarChats = document.getElementById('sidebar-chats');
     if (!sidebarChats) {
-      console.error('Sidebar chats container not found');
+      console.error('DEBUG: Sidebar chats container not found');
       return;
     }
     
     const chats = window.StorageManager.getChats();
+    console.log('DEBUG: Retrieved chats from storage:', Object.keys(chats).length);
+    
     const chatIds = Object.keys(chats).sort((a, b) => {
       return new Date(chats[b].timestamp) - new Date(chats[a].timestamp);
     });
@@ -24,6 +26,7 @@ const SidebarComponent = {
     sidebarChats.innerHTML = '';
     
     if (chatIds.length === 0) {
+      console.log('DEBUG: No chats available');
       sidebarChats.innerHTML = '<div class="empty-chats">Nessuna chat disponibile</div>';
       return;
     }
@@ -45,13 +48,14 @@ const SidebarComponent = {
       `;
       
       sidebarChats.appendChild(chatEl);
+      console.log(`DEBUG: Added chat to sidebar: ${chatId}`);
     });
     
     // Add click events
     this.setupChatItemListeners();
     this.setupDeleteButtons();
     
-    console.log('Chat list updated successfully');
+    console.log('DEBUG: Chat list update completed');
   },
   
   /**
@@ -59,10 +63,12 @@ const SidebarComponent = {
    */
   setupChatItemListeners: function() {
     const chatItemContents = document.querySelectorAll('.chat-item-content');
+    console.log(`DEBUG: Setting up listeners for ${chatItemContents.length} chat items`);
+    
     chatItemContents.forEach(el => {
       el.addEventListener('click', (e) => {
         const chatId = el.getAttribute('data-id');
-        console.log('Chat item clicked, ID:', chatId);
+        console.log('DEBUG: Chat item clicked, ID:', chatId);
         if (typeof window.ChatCore.loadChat === 'function') {
           window.ChatCore.loadChat(chatId);
           
@@ -71,69 +77,124 @@ const SidebarComponent = {
             document.body.classList.remove('sidebar-open');
           }
         } else {
-          console.error('ChatCore.loadChat function not available');
+          console.error('DEBUG: ChatCore.loadChat function not available');
         }
       });
     });
   },
   
   /**
-   * Configura i pulsanti di eliminazione
+   * Configura i pulsanti di eliminazione - VERSIONE CON DEBUG ESTESO
    */
   setupDeleteButtons: function() {
     const deleteBtns = document.querySelectorAll('.delete-chat-btn');
+    console.log(`DEBUG: Setting up ${deleteBtns.length} delete buttons`);
     
-    deleteBtns.forEach(btn => {
-      // Usa onclick diretto invece di addEventListener
-      btn.onclick = (e) => {
+    deleteBtns.forEach((btn, index) => {
+      console.log(`DEBUG: Setting up delete button ${index+1}/${deleteBtns.length}`);
+      
+      // Rimuoviamo qualsiasi event listener esistente clonando il pulsante
+      const originalBtn = btn;
+      const newBtn = originalBtn.cloneNode(true);
+      const chatId = originalBtn.getAttribute('data-id');
+      
+      console.log(`DEBUG: Original button data-id=${chatId}, replacing with clone`);
+      
+      if (originalBtn.parentNode) {
+        originalBtn.parentNode.replaceChild(newBtn, originalBtn);
+        console.log(`DEBUG: Button replaced successfully`);
+      } else {
+        console.error(`DEBUG: Button has no parent node, cannot replace`);
+      }
+      
+      // Aggiungiamo il nuovo listener con un approccio diverso e più verbose
+      newBtn.onclick = (e) => {
+        console.log(`DEBUG: Delete button clicked for chat ID: ${chatId}`);
         e.stopPropagation();
         e.preventDefault();
         
-        const chatId = btn.getAttribute('data-id');
+        // Prima controlliamo se il modale è disponibile
+        const modal = document.getElementById('custom-modal');
+        const modalExists = !!modal;
+        console.log(`DEBUG: Modal exists: ${modalExists}`);
         
-        if (confirm('Sei sicuro di voler eliminare questa chat?')) {
-          // Esegue direttamente l'operazione invece di usare un callback
-          const chats = window.StorageManager.getChats();
-          delete chats[chatId];
-          window.StorageManager.saveChats(chats);
-          
-          // Se era la chat corrente, crea una nuova chat
-          if (window.ChatCore.state.currentChatId === chatId) {
-            window.ChatCore.createNewChat();
+        // Controlliamo se il componente ModalComponent è disponibile
+        const modalComponentExists = !!window.ModalComponent;
+        console.log(`DEBUG: ModalComponent exists: ${modalComponentExists}`);
+        
+        if (modalComponentExists && modalExists) {
+          console.log(`DEBUG: Using modal component`);
+          window.ModalComponent.showModal(
+            'Sei sicuro di voler eliminare questa chat?',
+            () => {
+              console.log(`DEBUG: Modal confirmed, deleting chat ${chatId}`);
+              this.performDeleteChat(chatId);
+            }
+          );
+        } else {
+          console.log(`DEBUG: Using built-in confirm as fallback`);
+          if (confirm('Sei sicuro di voler eliminare questa chat?')) {
+            console.log(`DEBUG: Confirm dialog confirmed, deleting chat ${chatId}`);
+            this.performDeleteChat(chatId);
           } else {
-            // Aggiorna solo la sidebar
-            this.updateChatList(window.ChatCore.state.currentChatId);
+            console.log(`DEBUG: Deletion cancelled by user`);
           }
         }
+        
+        return false; // Previene ulteriore propagazione e comportamento predefinito
       };
+      
+      console.log(`DEBUG: Delete button setup complete for chatId=${chatId}`);
     });
+    
+    console.log(`DEBUG: All delete buttons setup completed`);
   },
   
   /**
    * Esegue l'eliminazione della chat
    */
   performDeleteChat: function(chatId) {
-    if (typeof window.ChatCore?.deleteChat === 'function') {
-      window.ChatCore.deleteChat(chatId);
-    } else {
-      console.error('ChatCore.deleteChat function not available');
-      
-      // Implementazione diretta come fallback
-      try {
+    console.log(`DEBUG: Performing delete for chat ID: ${chatId}`);
+    
+    try {
+      if (typeof window.ChatCore?.deleteChat === 'function') {
+        console.log(`DEBUG: Using ChatCore.deleteChat`);
+        window.ChatCore.deleteChat(chatId);
+      } else {
+        console.log(`DEBUG: ChatCore.deleteChat not available, using fallback`);
+        
+        // Implementazione diretta come fallback
         const chats = window.StorageManager.getChats();
-        delete chats[chatId];
-        window.StorageManager.saveChats(chats);
+        console.log(`DEBUG: Retrieved ${Object.keys(chats).length} chats from storage`);
         
-        // Aggiorna la UI
-        this.updateChatList();
-        
-        // Se necessario, crea una nuova chat
-        if (Object.keys(chats).length === 0 && typeof window.ChatCore?.createNewChat === 'function') {
-          window.ChatCore.createNewChat();
+        if (chats[chatId]) {
+          console.log(`DEBUG: Found chat ${chatId} in storage, deleting it`);
+          delete chats[chatId];
+          window.StorageManager.saveChats(chats);
+          console.log(`DEBUG: Chat deleted and storage updated`);
+          
+          // Aggiorna la UI
+          this.updateChatList(window.ChatCore?.state?.currentChatId);
+          
+          // Se necessario, crea una nuova chat
+          if (Object.keys(chats).length === 0) {
+            console.log(`DEBUG: No chats remaining, creating new chat`);
+            if (typeof window.ChatCore?.createNewChat === 'function') {
+              window.ChatCore.createNewChat();
+            } else {
+              console.error(`DEBUG: Cannot create new chat, ChatCore.createNewChat not available`);
+              // Ricarica la pagina come ultima risorsa
+              console.log(`DEBUG: Reloading page as last resort`);
+              window.location.reload();
+            }
+          }
+        } else {
+          console.error(`DEBUG: Chat ${chatId} not found in storage`);
         }
-      } catch (error) {
-        console.error('Error in fallback delete chat:', error);
       }
+    } catch (error) {
+      console.error('DEBUG: Error in performDeleteChat:', error);
+      alert('Si è verificato un errore durante l\'eliminazione della chat. Ricarica la pagina e riprova.');
     }
   },
   
@@ -143,7 +204,7 @@ const SidebarComponent = {
   openSidebar: function() {
     if (window.innerWidth <= 768) {
       document.body.classList.add('sidebar-open');
-      console.log('Sidebar opened');
+      console.log('DEBUG: Sidebar opened');
     }
   },
   
@@ -153,7 +214,7 @@ const SidebarComponent = {
   closeSidebar: function() {
     if (window.innerWidth <= 768) {
       document.body.classList.remove('sidebar-open');
-      console.log('Sidebar closed');
+      console.log('DEBUG: Sidebar closed');
     }
   },
   
@@ -161,7 +222,7 @@ const SidebarComponent = {
    * Imposta gli eventi per la UI mobile
    */
   setupMobileUI: function() {
-    console.log('Setting up mobile UI');
+    console.log('DEBUG: Setting up mobile UI');
     
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -177,7 +238,7 @@ const SidebarComponent = {
       newToggle.addEventListener('click', (e) => {
         e.stopPropagation();
         e.preventDefault();
-        console.log('Sidebar toggle clicked');
+        console.log('DEBUG: Sidebar toggle clicked');
         // Toggle della sidebar
         if (document.body.classList.contains('sidebar-open')) {
           this.closeSidebar();
@@ -186,7 +247,7 @@ const SidebarComponent = {
         }
       });
     } else {
-      console.error('Sidebar toggle button not found');
+      console.error('DEBUG: Sidebar toggle button not found');
     }
     
     // Utilizziamo SOLO l'overlay per la chiusura della sidebar
@@ -200,17 +261,17 @@ const SidebarComponent = {
       newOverlay.addEventListener('click', (e) => {
         e.stopPropagation();
         e.preventDefault();
-        console.log('Sidebar overlay clicked');
+        console.log('DEBUG: Sidebar overlay clicked');
         this.closeSidebar();
       });
       
       // Assicurati che sia cliccabile
       newOverlay.style.pointerEvents = 'auto';
     } else {
-      console.error('Sidebar overlay not found');
+      console.error('DEBUG: Sidebar overlay not found');
     }
     
-    console.log('Mobile UI setup completed');
+    console.log('DEBUG: Mobile UI setup completed');
   }
 };
 
@@ -219,6 +280,7 @@ window.SidebarComponent = SidebarComponent;
 
 // Inizializza quando il DOM è pronto
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('DEBUG: DOMContentLoaded event fired in sidebar.js');
   // Assicurati che la sidebar mobile sia configurata
   if (typeof window.SidebarComponent.setupMobileUI === 'function') {
     window.SidebarComponent.setupMobileUI();
@@ -227,6 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Reinizializza anche al caricamento completo della pagina
 window.addEventListener('load', function() {
+  console.log('DEBUG: Window load event fired in sidebar.js');
   // Assicurati che la sidebar mobile sia configurata
   if (typeof window.SidebarComponent.setupMobileUI === 'function') {
     window.SidebarComponent.setupMobileUI();

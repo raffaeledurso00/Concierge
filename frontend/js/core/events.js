@@ -11,6 +11,7 @@ const EventsManager = {
     this.setupChatForm();
     this.setupNewChatButton();
     this.setupSidebarToggle();
+    this.setupDeleteButtons(); // Aggiungiamo questo
     this.setupAppReadyListener();
     
     // Forzare l'esecuzione anche se già caricato
@@ -29,6 +30,7 @@ const EventsManager = {
     this.setupNewChatButton();
     this.setupSidebarToggle();
     this.setupWelcomeSuggestions();
+    this.setupDeleteButtons(); // Aggiungiamo questo
   },
   
   /**
@@ -147,6 +149,76 @@ const EventsManager = {
     newToggleBtn.style.cursor = 'pointer';
     
     console.log('Sidebar toggle button setup completed');
+  },
+  
+  /**
+   * NUOVO METODO: Gestisce i pulsanti di eliminazione chat 
+   * Questo metodo usa un approccio globale per catturare i click sui pulsanti delete
+   */
+  setupDeleteButtons: function() {
+    console.log('Setting up delete buttons with global event delegation');
+    
+    // Rimuoviamo qualsiasi event listener globale precedente clonando il corpo documento
+    document.removeEventListener('click', this.handleDeleteButtonClick);
+    
+    // Aggiunge un event listener globale usando event delegation
+    document.addEventListener('click', this.handleDeleteButtonClick);
+    
+    console.log('Global click handler for delete buttons has been set up');
+  },
+  
+  /**
+   * Handler per gestire i click sui pulsanti di eliminazione
+   */
+  handleDeleteButtonClick: function(e) {
+    // Cerca se l'elemento cliccato o uno dei suoi antenati è un pulsante di eliminazione
+    let target = e.target;
+    let isDeleteButton = false;
+    
+    while (target && target !== document) {
+      if (target.classList && target.classList.contains('delete-chat-btn')) {
+        isDeleteButton = true;
+        break;
+      }
+      target = target.parentNode;
+    }
+    
+    if (!isDeleteButton) return;
+    
+    // Abbiamo identificato un pulsante di eliminazione
+    e.stopPropagation();
+    e.preventDefault();
+    
+    const chatId = target.getAttribute('data-id');
+    console.log('Delete button clicked for chat ID:', chatId);
+    
+    // Mostra una conferma diretta
+    if (confirm('Sei sicuro di voler eliminare questa chat?')) {
+      try {
+        console.log('Deleting chat:', chatId);
+        
+        // Implementazione diretta dell'eliminazione della chat
+        const chats = JSON.parse(localStorage.getItem('villa_petriolo_chats') || '{}');
+        const currentChatId = window.ChatCore?.state?.currentChatId;
+        
+        delete chats[chatId];
+        localStorage.setItem('villa_petriolo_chats', JSON.stringify(chats));
+        
+        // Se era la chat corrente, crea una nuova chat
+        if (currentChatId === chatId && window.ChatCore?.createNewChat) {
+          window.ChatCore.createNewChat();
+        } else if (window.SidebarComponent?.updateChatList) {
+          // Altrimenti aggiorna solo la sidebar
+          window.SidebarComponent.updateChatList(currentChatId);
+        } else {
+          // Se tutto fallisce, ricarica la pagina
+          window.location.reload();
+        }
+      } catch (err) {
+        console.error('Error during chat deletion:', err);
+        alert('Si è verificato un errore durante l\'eliminazione. Ricarica la pagina e riprova.');
+      }
+    }
   },
   
   /**
