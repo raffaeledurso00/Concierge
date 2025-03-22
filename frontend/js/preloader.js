@@ -1,226 +1,172 @@
 /**
- * Preloader.js - Gestisce l'animazione del preloader
+ * preloader.js - Gestisce l'animazione di caricamento iniziale
  */
 
-// Classe Preloader
-class Preloader {
-    constructor(options) {
-      // Riferimenti ai DOM Elements
-      this.scope = options.scope || document;
-      this.target = options.target || document.getElementById('js-preloader');
-      this.header = this.target.querySelector('.preloader__header');
-      this.content = this.target.querySelector('.preloader__content');
-      this.counter = this.target.querySelector('.preloader__counter-current');
-      this.wrapperCircle = this.target.querySelector('.preloader__circle');
-      
-      // Opzioni per la tenda di transizione
-      this.curtain = options.curtain || {
-        element: document.getElementById('js-page-transition-curtain'),
-        background: '#9f887c'
-      };
-      
-      // Opzioni per il contatore
-      this.counterOpts = options.counter || {
-        easing: 'power4.out',
-        duration: 15,
-        start: 0,
-        target: 100,
-        prefix: '',
-        suffix: ''
-      };
-      
-      // Cursore personalizzato
-      this.cursor = options.cursor || {
-        element: document.getElementById('js-cursor'),
-        offset: { top: 0, left: 0 }
-      };
-      
-      this.timeline = gsap.timeline();
-      this._setupCursor();
-      this._bindEvents();
+// Attendi che il DOM sia completamente caricato
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Preloader initialization');
+    
+    // Verifica se GSAP è stato caricato correttamente
+    if (typeof gsap === 'undefined') {
+        console.error('GSAP non è stato caricato. Il preloader non funzionerà correttamente.');
+        hidePreloader();
+        return;
     }
     
-    _setupCursor() {
-      if (this.cursor && this.cursor.element) {
-        gsap.set(this.cursor.element, { autoAlpha: 1 });
-        
-        this.cursor.follower = {};
-        this.cursor.follower.element = this.cursor.element.querySelector('.cursor__follower');
-        this.cursor.follower.inner = this.cursor.element.querySelector('#inner');
-        this.cursor.follower.outer = this.cursor.element.querySelector('#outer');
-        
-        if (this.cursor.follower.element) {
-          this.cursor.follower.size = {
-            element: {
-              width: this.cursor.follower.element.offsetWidth,
-              height: this.cursor.follower.element.offsetHeight
+    // Riferimenti elementi DOM
+    const preloader = document.getElementById('js-preloader');
+    const counter = document.querySelector('.preloader__counter-current');
+    const curtain = document.getElementById('js-page-transition-curtain');
+    const cursor = document.getElementById('js-cursor');
+    const chatContainer = document.querySelector('.chat-container');
+    const innerCircle = document.querySelector('#js-preloader .preloader__circle #inner');
+    const outerCircle = document.querySelector('#js-preloader .preloader__circle #outer');
+    
+    // Verifica che tutti gli elementi necessari esistano
+    if (!preloader || !counter || !curtain || !chatContainer) {
+        console.error('Elementi DOM mancanti. Il preloader non funzionerà correttamente.');
+        hidePreloader();
+        return;
+    }
+    
+    console.log('Elementi preloader trovati:', {
+        preloader: !!preloader,
+        counter: !!counter,
+        curtain: !!curtain,
+        chatContainer: !!chatContainer,
+        innerCircle: !!innerCircle,
+        outerCircle: !!outerCircle
+    });
+    
+    // Nascondi la chat container durante il preloader
+    chatContainer.style.opacity = '0';
+    
+    // Inizia l'animazione del preloader
+    const timeline = gsap.timeline();
+    
+    // Aggiunge la classe per il cursore di caricamento
+    document.body.classList.add('cursor-progress');
+    
+    // Animazione dei cerchi SVG
+    if (innerCircle && outerCircle && gsap.getProperty) {
+        try {
+            // Verifica se il plugin DrawSVG è disponibile
+            if (innerCircle.drawSVG || gsap.plugins.drawSVG) {
+                timeline.to(outerCircle, {
+                    drawSVG: '0% 100%',
+                    duration: 3,
+                    ease: 'power4.out'
+                }, 'start');
+            } else {
+                console.warn('Plugin DrawSVG non disponibile, utilizzo animazione alternativa');
+                // Fallback se DrawSVG non è disponibile
+                timeline.to(outerCircle, {
+                    strokeDashoffset: 0,
+                    duration: 3,
+                    ease: 'power4.out'
+                }, 'start');
             }
-          };
+        } catch (e) {
+            console.error('Errore nell\'animazione del cerchio:', e);
         }
-        
-        if (this.wrapperCircle) {
-          this.cursor.centerX = this.wrapperCircle.offsetWidth / 2;
-          this.cursor.centerY = this.wrapperCircle.offsetHeight / 2;
-        }
-      }
     }
     
-    _bindEvents() {
-      window.addEventListener('mousemove', (e) => {
-        window.mouseX = e.clientX;
-        window.mouseY = e.clientY;
-      });
-    }
+    // Animazione contatore
+    timeline.to({ value: 0 }, {
+        value: 100,
+        duration: 3,
+        ease: 'power4.out',
+        onUpdate: function() {
+            counter.textContent = Math.round(this.targets()[0].value);
+        }
+    }, 'start');
     
-    start() {
-      document.body.classList.add('cursor-progress');
-      
-      // Nascondi il contenitore principale
-      const chatContainer = document.querySelector('.chat-container');
-      if (chatContainer) {
-        chatContainer.style.opacity = 0;
-      }
-      
-      if (this.cursor && this.cursor.element && this.cursor.follower) {
-        gsap.set(this.cursor.element, {
-          display: 'block',
-          top: '50%',
-          left: '50%'
+    // Dopo 3.5 secondi, completa l'animazione e mostra l'app
+    setTimeout(function() {
+        finishPreloader();
+    }, 3500);
+    
+    // Funzione per completare l'animazione del preloader
+    function finishPreloader() {
+        const completeTimeline = gsap.timeline({
+            onComplete: function() {
+                // Nascondi completamente il preloader
+                preloader.style.display = 'none';
+                curtain.style.display = 'none';
+                
+                // Rimuovi la classe del cursore
+                document.body.classList.remove('cursor-progress');
+                
+                // Inizializza l'app principale
+                if (typeof window.initializeApp === 'function') {
+                    window.initializeApp();
+                } else {
+                    console.warn('Function initializeApp not found, initializing app directly');
+                    // Fallback: inizializza direttamente
+                    const event = new Event('appReady');
+                    document.dispatchEvent(event);
+                }
+            }
         });
         
-        if (this.wrapperCircle && this.cursor.follower.element) {
-          gsap.set(this.cursor.follower.element, {
-            width: this.wrapperCircle.offsetWidth,
-            height: this.wrapperCircle.offsetHeight
-          });
-        }
-        
-        if (this.cursor.follower.inner && this.cursor.follower.outer) {
-          gsap.set([this.cursor.follower.inner, this.cursor.follower.outer], {
-            attr: {
-              cx: this.cursor.centerX,
-              cy: this.cursor.centerY,
-              r: this.cursor.centerX - 1
+        // Completa l'animazione del contatore
+        completeTimeline.to({}, {
+            duration: 0.3,
+            onUpdate: function() {
+                counter.textContent = '100';
             }
-          });
-        }
-      }
-      
-      // Avvia l'animazione del contatore e del cerchio
-      this.timeline.clear();
-      
-      // Animazione cerchio
-      if (this.cursor.follower && this.cursor.follower.outer) {
-        this.timeline.to(this.cursor.follower.outer, {
-          drawSVG: '0% 100%',
-          duration: this.counterOpts.duration,
-          ease: this.counterOpts.easing
-        }, 'start');
-      }
-      
-      // Animazione contatore
-      let countValue = this.counterOpts.start;
-      this.timeline.to({ value: countValue }, {
-        value: this.counterOpts.target,
-        duration: this.counterOpts.duration,
-        ease: this.counterOpts.easing,
-        onUpdate: () => {
-          countValue = Math.round(gsap.getProperty(this.timeline.targets()[1], 'value'));
-          if (this.counter) {
-            this.counter.textContent = this.counterOpts.prefix + countValue + this.counterOpts.suffix;
-          }
-        }
-      }, 'start');
-    }
-    
-    finish() {
-      return new Promise((resolve) => {
-        this.timeline.clear();
+        }, 'finish');
         
-        // Completa l'animazione del cerchio
-        if (this.cursor.follower && this.cursor.follower.outer) {
-          this.timeline.to(this.cursor.follower.outer, {
-            drawSVG: '0% 100%',
-            rotate: 0,
-            duration: 1.2,
-            ease: 'expo.inOut'
-          }, 'start');
-        }
-        
-        // Completa il contatore
-        this.timeline.to({}, {
-          duration: 1.2,
-          onUpdate: () => {
-            if (this.counter) {
-              this.counter.textContent = this.counterOpts.prefix + this.counterOpts.target + this.counterOpts.suffix;
-            }
-          }
-        }, 'start');
-        
-        // Mostra la tenda
-        if (this.curtain && this.curtain.element) {
-          this.timeline.set(this.curtain.element, {
+        // Mostra la tenda di transizione
+        completeTimeline.set(curtain, {
             display: 'block',
             autoAlpha: 0
-          }).to(this.curtain.element, {
+        }).to(curtain, {
             autoAlpha: 1,
             duration: 0.5
-          }, 'start+=0.5');
-        }
+        }, 'finish+=0.2');
         
-        // Anima il contenuto e il preloader
-        if (this.content) {
-          this.timeline.to(this.content, {
-            y: -30,
-            duration: 0.8,
+        // Nascondi il preloader
+        completeTimeline.to(preloader, {
+            autoAlpha: 0,
+            duration: 0.6,
             ease: 'power3.inOut'
-          }, 'start+=0.7');
-        }
+        }, 'finish+=0.4');
         
-        this.timeline.to(this.target, {
-          autoAlpha: 0,
-          duration: 0.8,
-          ease: 'power3.inOut'
-        }, 'start+=0.8');
-        
-        // Mostra il contenitore principale
-        const chatContainer = document.querySelector('.chat-container');
-        if (chatContainer) {
-          this.timeline.to(chatContainer, {
+        // Mostra la chat container
+        completeTimeline.to(chatContainer, {
             opacity: 1,
             duration: 0.5,
             ease: 'power2.inOut'
-          }, 'start+=1.2');
-        }
+        }, 'finish+=0.6');
         
         // Nascondi la tenda
-        if (this.curtain && this.curtain.element) {
-          this.timeline.to(this.curtain.element, {
+        completeTimeline.to(curtain, {
             autoAlpha: 0,
-            duration: 0.6
-          }, 'start+=1.4');
-        }
-        
-        // Posiziona il cursore
-        if (this.cursor && this.cursor.element) {
-          this.timeline.set(this.cursor.element, {
-            x: 0,
-            y: 0,
-            autoAlpha: 0,
-            clearProps: 'top,left'
-          }, 'start+=1.5');
-        }
-        
-        // Nascondi definitivamente il preloader e completa
-        this.timeline.set([this.target, this.curtain.element], {
-          display: 'none'
-        }).call(() => {
-          document.body.classList.remove('cursor-progress');
-          resolve(true);
-        });
-      });
+            duration: 0.5
+        }, 'finish+=0.9');
     }
-  }
-  
-  // Esporta per l'uso globale
-  window.Preloader = Preloader;
+    
+    // Funzione di fallback per nascondere il preloader in caso di errori
+    function hidePreloader() {
+        if (preloader) preloader.style.display = 'none';
+        if (chatContainer) chatContainer.style.opacity = '1';
+        
+        // Inizializza l'app
+        if (typeof window.initializeApp === 'function') {
+            window.initializeApp();
+        } else {
+            // Fallback: invia un evento che l'app è pronta
+            const event = new Event('appReady');
+            document.dispatchEvent(event);
+        }
+    }
+    
+    // Gestione degli errori: se qualcosa va storto, nascondi il preloader dopo 5 secondi
+    setTimeout(function() {
+        if (preloader.style.display !== 'none') {
+            console.warn('Preloader timeout: nascondo forzatamente');
+            hidePreloader();
+        }
+    }, 5000);
+});

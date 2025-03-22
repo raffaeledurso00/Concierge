@@ -1,5 +1,9 @@
+/**
+ * script.js - Funzionalità principale del Concierge Digitale
+ */
+
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Script loaded');
+    console.log('Main script loaded');
 
     // DOM Elements
     const messagesContainer = document.getElementById('messages-container');
@@ -26,118 +30,18 @@ document.addEventListener('DOMContentLoaded', function() {
         sidebarChats: !!sidebarChats
     });
 
-    // ===== CORE FUNCTIONS =====
-    //preolader
-    // Inizializza il preloader
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Preloader initialization');
+    // ===== UTILITY FUNCTIONS =====
     
-    // Caricheremo GSAP prima di tutto
-    function loadScripts() {
-      return new Promise((resolve) => {
-        // Carica GSAP
-        const gsapScript = document.createElement('script');
-        gsapScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
-        
-        gsapScript.onload = () => {
-          // Carica DrawSVG Plugin
-          const drawSVGScript = document.createElement('script');
-          drawSVGScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/DrawSVGPlugin.min.js';
-          
-          drawSVGScript.onload = () => {
-            resolve();
-          };
-          
-          document.head.appendChild(drawSVGScript);
-        };
-        
-        document.head.appendChild(gsapScript);
-      });
-    }
-    
-    // Avvia il preloader dopo aver caricato gli script necessari
-    loadScripts().then(() => {
-      // Nascondi il contenitore principale
-      document.querySelector('.chat-container').style.opacity = 0;
-      
-      window.PagePreloader = new Preloader({
-        target: document.getElementById('js-preloader'),
-        curtain: {
-          element: document.getElementById('js-page-transition-curtain'),
-          background: '#9f887c'
-        },
-        counter: {
-          easing: 'power4.out',
-          duration: 8, // Ridotto per una demo più veloce
-          start: 0,
-          target: 100,
-          prefix: '',
-          suffix: ''
-        },
-        cursor: {
-          element: document.getElementById('js-cursor')
+    // Get all chats from local storage
+    function getChats() {
+        try {
+            const chats = localStorage.getItem('villa_petriolo_chats');
+            return chats ? JSON.parse(chats) : {};
+        } catch (error) {
+            console.error('Error getting chats:', error);
+            return {};
         }
-      });
-      
-      // Avvia il preloader
-      window.PagePreloader.start();
-      
-      // Simula il caricamento e poi completa
-      setTimeout(() => {
-        window.PagePreloader.finish().then(() => {
-          console.log('Preloader completato');
-          
-          // Animazione per il logo
-          const headerLogo = document.querySelector('.chat-header-logo');
-          if (headerLogo && window.gsap) {
-            gsap.from(headerLogo, {
-              scale: 1.2,
-              opacity: 0,
-              duration: 0.5,
-              ease: 'back.out(1.7)'
-            });
-          }
-          
-          // Ora inizializziamo il resto dell'app
-          initializeApp();
-        });
-      }, 1500); // Ridotto per una demo più veloce
-    });
-  });
-  
-  // Funzione di inizializzazione principale dell'app
-  function initializeApp() {
-    // Qui sposteremo il codice di inizializzazione principale
-  }
-    // Codice da aggiungere all'inizio di script.js o in un nuovo file da includere prima di script.js
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Preloader initialization');
-    
-    // Nascondi il contenitore principale durante il caricamento
-    document.querySelector('.chat-container').style.opacity = 0;
-    
-    // Carica GSAP da CDN se non è già disponibile
-    function loadGSAP() {
-      return new Promise((resolve) => {
-        if (window.gsap) {
-          resolve();
-          return;
-        }
-        
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
-        script.onload = () => {
-          // Carica anche i plugin necessari
-          const drawSVGScript = document.createElement('script');
-          drawSVGScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/DrawSVGPlugin.min.js';
-          drawSVGScript.onload = resolve;
-          document.head.appendChild(drawSVGScript);
-        };
-        document.head.appendChild(script);
-      });
     }
-    
     
     // Save all chats
     function saveChats(chats) {
@@ -239,9 +143,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // If current chat is deleted, create a new one
         if (chatId === currentChatId) {
             createNewChat();
+        } else {
+            updateChatList();
         }
-        
-        updateChatList();
     }
     
     // Update chat list in sidebar
@@ -287,52 +191,18 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
-    // Funzioni per il modale personalizzato
-    function showModal(message, confirmCallback) {
-        const modal = document.getElementById('custom-modal');
-        const modalMessage = document.getElementById('modal-message');
-        const confirmBtn = document.getElementById('modal-confirm-btn');
-        const cancelBtn = document.getElementById('modal-cancel-btn');
-        
-        // Imposta il messaggio
-        modalMessage.textContent = message;
-        
-        // Mostra il modale
-        modal.classList.add('show');
-        
-        // Gestisci i pulsanti
-        const handleConfirm = () => {
-            modal.classList.remove('show');
-            confirmBtn.removeEventListener('click', handleConfirm);
-            cancelBtn.removeEventListener('click', handleCancel);
-            confirmCallback();
-        };
-        
-        const handleCancel = () => {
-            modal.classList.remove('show');
-            confirmBtn.removeEventListener('click', handleConfirm);
-            cancelBtn.removeEventListener('click', handleCancel);
-        };
-        
-        confirmBtn.addEventListener('click', handleConfirm);
-        cancelBtn.addEventListener('click', handleCancel);
-    }
-
-    // Quando aggiungi i bottoni di eliminazione:
-    document.querySelectorAll('.delete-chat-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const chatId = btn.dataset.id;
-            
-            // Usa il modale personalizzato invece di confirm()
-            showModal('Sei sicuro di voler eliminare questa chat?', () => {
-                deleteChat(chatId);
-                if (chatId === currentChatId) {
-                    createNewChat();
-                }
+        // Add delete events with custom modal
+        document.querySelectorAll('.delete-chat-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const chatId = btn.dataset.id;
+                
+                // Usa il modale personalizzato
+                showModal('Sei sicuro di voler eliminare questa chat?', () => {
+                    deleteChat(chatId);
+                });
             });
         });
-    });
     }
     
     // Funzione per aggiornare l'indicatore di argomento
@@ -415,104 +285,102 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Display message in UI
-// Versione aggiornata della funzione displayMessage da sostituire in script.js
-
-// Display message in UI with formatted lists
-function displayMessage(text, sender) {
-    const messageRow = document.createElement('div');
-    messageRow.className = `message-row ${sender === 'user' ? 'user-row' : 'bot-row'}`;
-    
-    // Formatta il messaggio solo se è del bot e abbiamo il formattatore
-    let formattedText = text;
-    if (sender === 'bot' && window.messageFormatter) {
-        formattedText = window.messageFormatter.format(text);
-    }
-    
-    messageRow.innerHTML = `
-        <div class="message ${sender === 'user' ? 'user-message' : 'bot-message'}">
-            <div class="message-avatar">
-                <i class="${sender === 'user' ? 'fas fa-user' : 'fas fa-concierge-bell'}"></i>
-            </div>
-            <div class="message-content">
-                ${formattedText}
-            </div>
-        </div>
-    `;
-    
-    // Aggiunge suggerimenti rapidi se è un messaggio del bot che finisce con una domanda
-    if (sender === 'bot' && text.trim().endsWith('?')) {
-        addQuickSuggestionsToMessage(messageRow, text);
-    }
-    
-    messagesContainer.appendChild(messageRow);
-    
-    // Imposta la variabile --item-index per ogni elemento della lista per l'animazione
-    const listItems = messageRow.querySelectorAll('.list-item');
-    listItems.forEach((item, index) => {
-        item.style.setProperty('--item-index', index);
-    });
-    
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-// Funzione per aggiungere suggerimenti rapidi a un messaggio del bot
-function addQuickSuggestionsToMessage(messageRow, text) {
-    // Estrai potenziali suggerimenti dal testo della domanda
-    let suggestions = [];
-    
-    // Se la domanda contiene "quale" o "preferisce", cerca opzioni nel testo
-    if (text.match(/quale|preferisce|interessa|desidera/i)) {
-        // Cerca parole chiave con la prima lettera maiuscola (potrebbero essere opzioni)
-        const options = text.match(/([A-Z][a-z]+(?:\s+[a-z]+){0,3})/g);
+    // Display message in UI with formatted lists
+    function displayMessage(text, sender) {
+        const messageRow = document.createElement('div');
+        messageRow.className = `message-row ${sender === 'user' ? 'user-row' : 'bot-row'}`;
         
-        if (options && options.length > 0) {
-            // Filtra opzioni che sembrano essere nomi di piatti o attività
-            suggestions = [...new Set(options)].filter(option => 
-                option.length > 3 && 
-                !['Villa', 'Petriolo', 'ANTIPASTI', 'PRIMI', 'SECONDI', 'DOLCI', 'INTERNE', 'ESTERNE', 'ESCURSIONI'].includes(option)
-            );
+        // Formatta il messaggio solo se è del bot e abbiamo il formattatore
+        let formattedText = text;
+        if (sender === 'bot' && window.messageFormatter) {
+            formattedText = window.messageFormatter.format(text);
         }
-    }
-    
-    // Se non abbiamo suggerimenti dal testo, usa alcuni predefiniti basati sul contesto
-    if (suggestions.length === 0) {
-        // Determina il contesto in base alle parole chiave nel testo
-        if (text.match(/menu|ristorante|pranzo|cena|piatti|mangiare/i)) {
-            suggestions = ['Sì, grazie', 'Quali sono i piatti tipici?', 'Orari di apertura?', 'Posso prenotare?'];
-        } else if (text.match(/attività|escursion|tour|visita|passeggiata/i)) {
-            suggestions = ['Mi interessa', 'Costi?', 'Durata?', 'Altre opzioni?'];
-        } else if (text.match(/evento|spettacolo|concerto|degustazione/i)) {
-            suggestions = ['Voglio partecipare', 'Quando?', 'Prezzo?', 'È necessario prenotare?'];
-        } else {
-            suggestions = ['Sì', 'No', 'Più informazioni', 'Altro?'];
-        }
-    }
-    
-    // Limita a 4 suggerimenti
-    suggestions = suggestions.slice(0, 4);
-    
-    // Aggiungi i suggerimenti solo se ne abbiamo
-    if (suggestions.length > 0) {
-        const suggestionsContainer = document.createElement('div');
-        suggestionsContainer.className = 'quick-suggestions';
         
-        suggestions.forEach(suggestion => {
-            const suggestionBtn = document.createElement('button');
-            suggestionBtn.className = 'quick-suggestion';
-            suggestionBtn.textContent = suggestion;
-            suggestionBtn.addEventListener('click', () => {
-                // Inserisci il suggerimento nell'input e invia
-                document.getElementById('message-input').value = suggestion;
-                document.getElementById('chat-form').dispatchEvent(new Event('submit'));
-            });
-            suggestionsContainer.appendChild(suggestionBtn);
+        messageRow.innerHTML = `
+            <div class="message ${sender === 'user' ? 'user-message' : 'bot-message'}">
+                <div class="message-avatar">
+                    <i class="${sender === 'user' ? 'fas fa-user' : 'fas fa-concierge-bell'}"></i>
+                </div>
+                <div class="message-content">
+                    ${formattedText}
+                </div>
+            </div>
+        `;
+        
+        // Aggiunge suggerimenti rapidi se è un messaggio del bot che finisce con una domanda
+        if (sender === 'bot' && text.trim().endsWith('?')) {
+            addQuickSuggestionsToMessage(messageRow, text);
+        }
+        
+        messagesContainer.appendChild(messageRow);
+        
+        // Imposta la variabile --item-index per ogni elemento della lista per l'animazione
+        const listItems = messageRow.querySelectorAll('.list-item');
+        listItems.forEach((item, index) => {
+            item.style.setProperty('--item-index', index);
         });
         
-        // Aggiungi i suggerimenti al messaggio
-        messageRow.querySelector('.message-content').appendChild(suggestionsContainer);
+        // Scorri alla fine del contenitore dei messaggi
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
-}
+    
+    // Funzione per aggiungere suggerimenti rapidi a un messaggio del bot
+    function addQuickSuggestionsToMessage(messageRow, text) {
+        // Estrai potenziali suggerimenti dal testo della domanda
+        let suggestions = [];
+        
+        // Se la domanda contiene "quale" o "preferisce", cerca opzioni nel testo
+        if (text.match(/quale|preferisce|interessa|desidera/i)) {
+            // Cerca parole chiave con la prima lettera maiuscola (potrebbero essere opzioni)
+            const options = text.match(/([A-Z][a-z]+(?:\s+[a-z]+){0,3})/g);
+            
+            if (options && options.length > 0) {
+                // Filtra opzioni che sembrano essere nomi di piatti o attività
+                suggestions = [...new Set(options)].filter(option => 
+                    option.length > 3 && 
+                    !['Villa', 'Petriolo', 'ANTIPASTI', 'PRIMI', 'SECONDI', 'DOLCI', 'INTERNE', 'ESTERNE', 'ESCURSIONI'].includes(option)
+                );
+            }
+        }
+        
+        // Se non abbiamo suggerimenti dal testo, usa alcuni predefiniti basati sul contesto
+        if (suggestions.length === 0) {
+            // Determina il contesto in base alle parole chiave nel testo
+            if (text.match(/menu|ristorante|pranzo|cena|piatti|mangiare/i)) {
+                suggestions = ['Sì, grazie', 'Quali sono i piatti tipici?', 'Orari di apertura?', 'Posso prenotare?'];
+            } else if (text.match(/attività|escursion|tour|visita|passeggiata/i)) {
+                suggestions = ['Mi interessa', 'Costi?', 'Durata?', 'Altre opzioni?'];
+            } else if (text.match(/evento|spettacolo|concerto|degustazione/i)) {
+                suggestions = ['Voglio partecipare', 'Quando?', 'Prezzo?', 'È necessario prenotare?'];
+            } else {
+                suggestions = ['Sì', 'No', 'Più informazioni', 'Altro?'];
+            }
+        }
+        
+        // Limita a 4 suggerimenti
+        suggestions = suggestions.slice(0, 4);
+        
+        // Aggiungi i suggerimenti solo se ne abbiamo
+        if (suggestions.length > 0) {
+            const suggestionsContainer = document.createElement('div');
+            suggestionsContainer.className = 'quick-suggestions';
+            
+            suggestions.forEach(suggestion => {
+                const suggestionBtn = document.createElement('button');
+                suggestionBtn.className = 'quick-suggestion';
+                suggestionBtn.textContent = suggestion;
+                suggestionBtn.addEventListener('click', () => {
+                    // Inserisci il suggerimento nell'input e invia
+                    messageInput.value = suggestion;
+                    chatForm.dispatchEvent(new Event('submit'));
+                });
+                suggestionsContainer.appendChild(suggestionBtn);
+            });
+            
+            // Aggiungi i suggerimenti al messaggio
+            messageRow.querySelector('.message-content').appendChild(suggestionsContainer);
+        }
+    }
     
     // Show typing indicator
     function showTypingIndicator() {
@@ -541,6 +409,37 @@ function addQuickSuggestionsToMessage(messageRow, text) {
     function removeTypingIndicator() {
         const indicator = document.getElementById('typing-indicator-row');
         if (indicator) indicator.remove();
+    }
+    
+    // Funzioni per il modale personalizzato
+    function showModal(message, confirmCallback) {
+        const modal = document.getElementById('custom-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const confirmBtn = document.getElementById('modal-confirm-btn');
+        const cancelBtn = document.getElementById('modal-cancel-btn');
+        
+        // Imposta il messaggio
+        modalMessage.textContent = message;
+        
+        // Mostra il modale
+        modal.classList.add('show');
+        
+        // Gestisci i pulsanti
+        const handleConfirm = () => {
+            modal.classList.remove('show');
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            confirmCallback();
+        };
+        
+        const handleCancel = () => {
+            modal.classList.remove('show');
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+        };
+        
+        confirmBtn.addEventListener('click', handleConfirm);
+        cancelBtn.addEventListener('click', handleCancel);
     }
     
     // Send message to backend
@@ -591,9 +490,6 @@ function addQuickSuggestionsToMessage(messageRow, text) {
             return "Mi scusi, sto riscontrando problemi di connessione. Come posso aiutarla con il suo soggiorno a Villa Petriolo? Posso fornirle informazioni sul ristorante, sulle attività disponibili o sui servizi della struttura.";
         }
     }
-    
-    
-    
 
     // ===== EVENT LISTENERS =====
     
@@ -660,9 +556,9 @@ function addQuickSuggestionsToMessage(messageRow, text) {
     
     // ===== INITIALIZATION =====
     
-    // Initialize app
-    function init() {
-        console.log('Initializing app');
+    // Funzione di inizializzazione dell'app che viene chiamata dopo il preloader
+    window.initializeApp = function() {
+        console.log('Initializing chat app');
         
         const chats = getChats();
         const chatIds = Object.keys(chats).sort((a, b) => {
@@ -674,8 +570,17 @@ function addQuickSuggestionsToMessage(messageRow, text) {
         } else {
             createNewChat();
         }
-    }
+    };
     
-    // Start the app
-    init();
+    // Questo evento verrà attivato quando l'app è pronta (dopo il preloader)
+    document.addEventListener('appReady', function() {
+        window.initializeApp();
+    });
+    
+    // Se il preloader non è attivo, inizializza direttamente
+    const preloader = document.getElementById('js-preloader');
+    if (!preloader || preloader.style.display === 'none' || getComputedStyle(preloader).opacity === '0') {
+        // Inizializzazione diretta se il preloader non è presente o è già stato completato
+        window.initializeApp();
+    }
 });
