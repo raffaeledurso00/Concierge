@@ -3,6 +3,8 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Inizializzazione controllo sidebar toggle');
+    
     // Trova il pulsante di toggle
     const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
     
@@ -10,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!sidebarToggleBtn) {
         console.error('Pulsante di toggle della sidebar non trovato');
         return;
+    } else {
+        console.log('Pulsante di toggle della sidebar trovato');
     }
     
     // Funzione per verificare se siamo in modalità mobile
@@ -28,10 +32,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Salva lo stato nel localStorage per ricordarlo tra le sessioni
         const isCollapsed = document.body.classList.contains('sidebar-collapsed');
         localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false');
+        
+        console.log('Sidebar toggle stato: ' + (isCollapsed ? 'collassata' : 'espansa'));
     }
     
     // Aggiungi evento di click al pulsante
     sidebarToggleBtn.addEventListener('click', function(e) {
+        console.log('Click sul pulsante toggle sidebar');
         e.stopPropagation(); // Previeni il bubbling
         toggleSidebar();
     });
@@ -43,6 +50,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Applica lo stato solo se non siamo in modalità mobile
         if (isCollapsed && !isMobileView()) {
             document.body.classList.add('sidebar-collapsed');
+            console.log('Ripristinato stato sidebar: collassata');
+        } else {
+            console.log('Ripristinato stato sidebar: espansa');
         }
     }
     

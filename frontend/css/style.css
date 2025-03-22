@@ -740,11 +740,32 @@ body {
     display: none;
 }
 
-/* Stile per il pulsante di toggle della sidebar */
+/* Bottone mobile - visibile solo su schermi piccoli */
+.mobile-menu #sidebar-toggle {
+    display: none; /* Nascosto di default */
+}
+
+@media (max-width: 768px) {
+    .mobile-menu {
+        display: block; /* Mostra il contenitore in modalità mobile */
+    }
+    
+    .mobile-menu #sidebar-toggle {
+        display: block; /* Mostra il bottone in modalità mobile */
+    }
+    
+    /* Nascondi il bottone desktop in modalità mobile */
+    .sidebar-toggle-btn {
+        display: none !important;
+    }
+}
+
+/* Bottone desktop - visibile solo su schermi grandi */
 .sidebar-toggle-btn {
     position: absolute;
-    bottom: 15px;
+    top: 50%;
     right: -12px;
+    transform: translateY(-50%);
     width: 24px;
     height: 24px;
     background-color: rgb(159, 136, 124);
@@ -756,13 +777,14 @@ body {
     justify-content: center;
     cursor: pointer;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    z-index: 20;
-    transition: transform 0.3s ease;
+    z-index: 1000;
+    transition: transform 0.3s ease, background-color 0.2s ease;
 }
 
-/* Ruota l'icona quando la sidebar è ridotta */
-.sidebar-collapsed .sidebar-toggle-btn {
-    transform: rotate(180deg);
+@media (max-width: 768px) {
+    .sidebar-toggle-btn {
+        display: none !important;
+    }
 }
 
 /* Modifica posizione del logo quando la sidebar è ridotta */
@@ -809,39 +831,44 @@ body {
 /* Responsività - non applicare il collasso su mobile */
 @media (max-width: 768px) {
     .sidebar-toggle-btn {
-        display: none;
-    }
-    
-    .sidebar-collapsed .chat-sidebar {
-        width: 260px;
-    }
-    
-    .sidebar-collapsed .sidebar-header h2,
-    .sidebar-collapsed .chat-item-content,
-    .sidebar-collapsed .new-chat span,
-    .sidebar-collapsed .user-info span,
-    .sidebar-collapsed .delete-chat-btn {
-        display: block;
-    }
-    
-    .sidebar-collapsed .logo {
-        width: 120px;
-        margin-right: 10px;
-    }
-    
-    .sidebar-collapsed .sidebar-header {
+        position: absolute;
+        top: 50%;
+        right: -12px;
+        width: 24px;
+        height: 24px;
+        background-color: rgb(159, 136, 124);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        display: flex;
+        align-items: center;
         justify-content: center;
-        padding: 20px;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        z-index: 20;
+        transition: transform 0.3s ease, background-color 0.2s ease;
     }
-    
-    .sidebar-collapsed #new-chat-btn {
-        padding: 10px;
-        justify-content: center;
-        gap: 8px;
-    }
-    
-    .sidebar-collapsed .user-info {
-        gap: 10px;
+}
+
+/* Hover effect per il pulsante */
+.sidebar-toggle-btn:hover {
+    background-color: rgb(139, 116, 104);
+}
+
+/* Posizione relativa per la sidebar per consentire il posizionamento assoluto del bottone */
+.chat-sidebar {
+    position: relative;
+}
+
+/* Ruota l'icona quando la sidebar è ridotta */
+.sidebar-collapsed .sidebar-toggle-btn {
+    transform: rotate(180deg);
+}
+
+/* Assicurati che il bottone sia visibile anche in modalità desktop */
+@media (min-width: 769px) {
+    .sidebar-toggle-btn {
+        display: flex !important;
     }
 }
 
