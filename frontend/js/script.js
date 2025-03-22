@@ -28,6 +28,87 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== CORE FUNCTIONS =====
     //preolader
+    // Inizializza il preloader
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Preloader initialization');
+    
+    // Caricheremo GSAP prima di tutto
+    function loadScripts() {
+      return new Promise((resolve) => {
+        // Carica GSAP
+        const gsapScript = document.createElement('script');
+        gsapScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
+        
+        gsapScript.onload = () => {
+          // Carica DrawSVG Plugin
+          const drawSVGScript = document.createElement('script');
+          drawSVGScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/DrawSVGPlugin.min.js';
+          
+          drawSVGScript.onload = () => {
+            resolve();
+          };
+          
+          document.head.appendChild(drawSVGScript);
+        };
+        
+        document.head.appendChild(gsapScript);
+      });
+    }
+    
+    // Avvia il preloader dopo aver caricato gli script necessari
+    loadScripts().then(() => {
+      // Nascondi il contenitore principale
+      document.querySelector('.chat-container').style.opacity = 0;
+      
+      window.PagePreloader = new Preloader({
+        target: document.getElementById('js-preloader'),
+        curtain: {
+          element: document.getElementById('js-page-transition-curtain'),
+          background: '#9f887c'
+        },
+        counter: {
+          easing: 'power4.out',
+          duration: 8, // Ridotto per una demo più veloce
+          start: 0,
+          target: 100,
+          prefix: '',
+          suffix: ''
+        },
+        cursor: {
+          element: document.getElementById('js-cursor')
+        }
+      });
+      
+      // Avvia il preloader
+      window.PagePreloader.start();
+      
+      // Simula il caricamento e poi completa
+      setTimeout(() => {
+        window.PagePreloader.finish().then(() => {
+          console.log('Preloader completato');
+          
+          // Animazione per il logo
+          const headerLogo = document.querySelector('.chat-header-logo');
+          if (headerLogo && window.gsap) {
+            gsap.from(headerLogo, {
+              scale: 1.2,
+              opacity: 0,
+              duration: 0.5,
+              ease: 'back.out(1.7)'
+            });
+          }
+          
+          // Ora inizializziamo il resto dell'app
+          initializeApp();
+        });
+      }, 1500); // Ridotto per una demo più veloce
+    });
+  });
+  
+  // Funzione di inizializzazione principale dell'app
+  function initializeApp() {
+    // Qui sposteremo il codice di inizializzazione principale
+  }
     // Codice da aggiungere all'inizio di script.js o in un nuovo file da includere prima di script.js
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -57,80 +138,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
-    // Inizializza il preloader
-    async function initializePreloader() {
-      // Assicurati che GSAP sia caricato
-      await loadGSAP();
-      
-      // Crea l'istanza del preloader
-      window.PagePreloader = new Preloader({
-        scope: document,
-        target: document.getElementById('js-preloader'),
-        curtain: {
-          element: document.getElementById('js-page-transition-curtain'),
-          background: '#9f887c'
-        },
-        cursor: {
-          element: document.getElementById('js-cursor'),
-          offset: {
-            top: 0,
-            left: 0
-          }
-        },
-        counter: {
-          easing: 'power4.out',
-          duration: 20,
-          start: 0,
-          target: 100,
-          prefix: '',
-          suffix: ''
-        }
-      });
-      
-      // Avvia il preloader
-      window.PagePreloader.start();
-      
-      // Simula il caricamento degli assets
-      setTimeout(() => {
-        // Completa il preloader e mostra il contenuto principale
-        window.PagePreloader.finish().then(() => {
-          // Evento per segnalare che il preloader è completato
-          console.log('Preloader completed');
-          
-          // Mostra il contenitore principale con un'animazione
-          gsap.to('.chat-container', {
-            opacity: 1,
-            duration: 0.5,
-            ease: 'power2.inOut'
-          });
-          
-          // Piccola animazione per il logo nell'header
-          const headerLogo = document.querySelector('.chat-header-logo');
-          if (headerLogo) {
-            gsap.from(headerLogo, {
-              scale: 1.2,
-              opacity: 0,
-              duration: 0.5,
-              ease: 'back.out(1.7)'
-            });
-          }
-        });
-      }, 2500); // Attendi 2.5 secondi prima di completare il preloader
-    }
-    
-    // Avvia l'inizializzazione
-    initializePreloader();
-  });
-    // Get all chats
-    function getChats() {
-        try {
-            const chats = localStorage.getItem('villa_petriolo_chats');
-            return chats ? JSON.parse(chats) : {};
-        } catch (error) {
-            console.error('Error loading chats:', error);
-            return {};
-        }
-    }
     
     // Save all chats
     function saveChats(chats) {
